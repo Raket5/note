@@ -372,3 +372,36 @@ body {
   @page { size: A4; margin: 0; }
   body { background: #fff; }
 }
+
+
+
+/* A4 Page Simulation in Editor */
+.content-editor {
+    background: 
+        linear-gradient(#fff 0px, #fff 277mm, #f0f0f0 277mm, #f0f0f0 100%),
+        linear-gradient(#fff 0px, #fff 277mm, #f0f0f0 277mm, #f0f0f0 100%);
+    background-size: 210mm 297mm;
+    background-position: top center, top center 297mm;
+    background-repeat: no-repeat;
+    box-shadow: 0 0 25px rgba(0,0,0,0.15);
+    margin: 20px auto;
+    padding: 18mm 18mm 20mm;
+    max-width: 210mm;
+    min-height: 297mm;
+    line-height: 1.75;
+    font-size: 11.2pt;
+}
+
+/* Visual page break line */
+.content-editor::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 190mm;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, #e74c3c, #e74c3c 10px, transparent 10px, transparent 20px);
+    top: 277mm;
+    opacity: 0.6;
+    pointer-events: none;
+}
