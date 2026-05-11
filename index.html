@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sheet Maker — Mahmud Sir</title>
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <title>Professional Sheet Maker — Mahmud Sir</title>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
       <span class="logo-emblem">⚓</span>
       <div class="header-text">
         <h1>Sheet Maker Pro</h1>
-        <p>BN School & College, CTG</p>
+        <p>Bangladesh Navy School And College, CTG</p>
       </div>
     </div>
     <div class="header-actions">
@@ -28,88 +28,85 @@
 <div class="app-body">
   <aside class="sidebar">
     <div class="sidebar-section">
-      <h3 class="section-title">Sheet Info</h3>
-      <label class="field-label">Sheet Title</label>
-      <input type="text" id="sheetTitle" class="field-input" placeholder="অধ্যায় ১: তথ্য ও যোগাযোগ প্রযুক্তি">
+      <h3 class="section-title">Sheet Information</h3>
+      <label class="field-label">Title</label>
+      <input type="text" id="sheetTitle" class="field-input" placeholder="Chapter Name...">
       
       <label class="field-label">Subject</label>
       <input type="text" id="sheetSubject" class="field-input" value="ICT">
       
       <label class="field-label">Class</label>
       <input type="text" id="sheetClass" class="field-input" value="Class 10">
-      
-      <label class="field-label">Type</label>
-      <select id="sheetType" class="field-input">
-        <option value="lecture">Lecture Sheet</option>
-        <option value="exam">Exam Paper</option>
-        <option value="suggestion">Suggestion</option>
-      </select>
     </div>
 
     <div class="sidebar-section">
-      <h3 class="section-title">Settings</h3>
+      <h3 class="section-title">Page Settings</h3>
       <div class="toggle-row">
-        <input type="checkbox" id="showWatermark" checked>
-        <label for="showWatermark" class="toggle-label">Watermark</label>
+        <label class="toggle-label">Watermark Text</label>
+        <input type="text" id="watermarkText" class="field-input" value="Mahmud Sir">
       </div>
-      <input type="text" id="watermarkText" class="field-input" value="Mahmud Sir">
-      
-      <div class="toggle-row" style="margin-top:10px;">
-        <input type="checkbox" id="showPageNum" checked>
-        <label for="showPageNum" class="toggle-label">Page Number</label>
-      </div>
-
-      <div class="toggle-row" style="margin-top:10px;">
-        <input type="checkbox" id="showTeacherSignature" checked>
-        <label for="showTeacherSignature" class="toggle-label">Signature</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="showWatermark" checked> Show Watermark</label><br>
+        <label><input type="checkbox" id="showPageNum" checked> Show Page Number</label><br>
+        <label><input type="checkbox" id="showTeacherSignature" checked> Show Signature</label>
       </div>
     </div>
-    
+
     <div class="sidebar-section">
-      <h3 class="section-title">Teacher Info</h3>
-      <input type="text" id="teacherName" class="field-input" value="Mahmud Hasan">
+      <h3 class="section-title">Teacher Branding</h3>
+      <input type="text" id="teacherName" class="field-input" value="S. M. Mahmud Hasan">
       <input type="text" id="teacherMobile" class="field-input" value="018XXXXXXXX">
+      <input type="text" id="teacherDesignation" class="field-input" value="Assistant Teacher (ICT)">
     </div>
   </aside>
 
   <main class="editor-area">
     <div class="editor-toolbar">
-      <button class="tbtn" onclick="fmt('bold')"><b>B</b></button>
-      <button class="tbtn" onclick="fmt('italic')"><i>I</i></button>
-      <button class="tbtn" onclick="fmt('underline')"><u>U</u></button>
-      <button class="tbtn" onclick="fmt('justifyLeft')">Left</button>
-      <button class="tbtn" onclick="fmt('justifyCenter')">Center</button>
-      <button class="tbtn" onclick="insertTable()">📊 Table</button>
-      <button class="tbtn" onclick="insertMCQ()">📝 MCQ</button>
-      <button class="tbtn" onclick="fmt('insertOrderedList')">1. List</button>
-      <select id="fontChoice" class="tbtn" onchange="updateFont()">
-        <option value="hind">Hind Siliguri (Bangla)</option>
-        <option value="inter">Inter (English)</option>
-      </select>
+      <div class="toolbar-group">
+        <button class="tbtn" onclick="fmt('bold')" title="Bold"><b>B</b></button>
+        <button class="tbtn" onclick="fmt('italic')" title="Italic"><i>I</i></button>
+        <button class="tbtn" onclick="fmt('underline')" title="Underline"><u>U</u></button>
+      </div>
+      <div class="toolbar-group">
+        <button class="tbtn" onclick="fmt('justifyLeft')">Left</button>
+        <button class="tbtn" onclick="fmt('justifyCenter')">Center</button>
+        <button class="tbtn" onclick="fmt('justifyRight')">Right</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="tbtn" onclick="insertTable()">📊 Table</button>
+        <button class="tbtn" onclick="insertMCQ()">📝 MCQ Block</button>
+        <button class="tbtn" onclick="fmt('insertOrderedList')">1. List</button>
+      </div>
+      <div class="toolbar-group">
+        <select id="fontChoice" class="tbtn" onchange="updateFont()">
+          <option value="hind">Bangla (Hind Siliguri)</option>
+          <option value="inter">English (Inter)</option>
+        </select>
+      </div>
     </div>
 
-    <div id="contentEditor" class="content-editor" contenteditable="true" placeholder="এখানে লিখুন বা কপি করে পেস্ট করুন..."></div>
-    <p class="editor-hint">💡 Hint: টাইপ করার সময় পেজ ব্রেক লাইন অনুসরণ করুন।</p>
+    <div class="editor-paper-container">
+      <div id="contentEditor" class="content-editor" contenteditable="true" placeholder="আপনার কন্টেন্ট এখানে লিখুন বা পেস্ট করুন..."></div>
+    </div>
   </main>
 </div>
 
 <div id="previewModal" class="modal-overlay hidden">
   <div class="modal-box preview-modal-box">
-    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-        <h2>Sheet Preview</h2>
-        <button class="btn btn-primary" onclick="closeModal('previewModal')">Close</button>
+    <div class="modal-header">
+      <h2>Sheet Preview (Full View)</h2>
+      <button class="btn btn-ghost" onclick="closeModal('previewModal')">✕ Close</button>
     </div>
     <div id="previewContent"></div>
   </div>
 </div>
 
 <div id="downloadModal" class="modal-overlay hidden">
-  <div class="modal-box" style="max-width:400px; text-align:center;">
-    <h3>Download Options</h3>
-    <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn btn-primary" style="flex:1;" onclick="downloadPDF()">PDF (Print)</button>
-        <button class="btn btn-outline" style="flex:1; color:#000;" onclick="closeModal('downloadModal')">Cancel</button>
-    </div>
+  <div class="modal-box" style="max-width: 400px; text-align: center;">
+    <h3>Download Sheet</h3>
+    <p style="color: #666; font-size: 14px; margin-bottom: 20px;">PDF ফরম্যাটে প্রিন্ট করার জন্য নিচের বাটনে ক্লিক করুন।</p>
+    <button class="btn btn-primary" style="width: 100%;" onclick="downloadPDF()">Download as PDF</button>
+    <button class="btn btn-ghost" style="width: 100%; margin-top: 10px;" onclick="closeModal('downloadModal')">Cancel</button>
   </div>
 </div>
 
