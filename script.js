@@ -1,36 +1,23 @@
-// =============================================
-// SHEET MAKER — script.js (Word Style)
-// =============================================
-
 const contentEditor = document.getElementById('contentEditor');
-const sheetTitle = document.getElementById('sheetTitle');
-const sheetSubject = document.getElementById('sheetSubject');
-const sheetClass = document.getElementById('sheetClass');
-const sheetType = document.getElementById('sheetType');
-const teacherName = document.getElementById('teacherName');
-const teacherMobile = document.getElementById('teacherMobile');
 const fontChoice = document.getElementById('fontChoice');
-const watermarkText = document.getElementById('watermarkText');
-const showWatermark = document.getElementById('showWatermark');
-const showPageNum = document.getElementById('showPageNum');
-const showTeacherSignature = document.getElementById('showTeacherSignature');
 
-// ১. এডিটর টুলস (Word এর মতো)
+// ১. এডিটর টুলস
 function fmt(command, value = null) {
     document.execCommand(command, false, value);
     contentEditor.focus();
 }
 
+function updateFont() {
+    contentEditor.style.fontFamily = fontChoice.value === 'hind' ? "'Hind Siliguri', sans-serif" : "'Inter', sans-serif";
+}
+
 function insertTable() {
-    let rows = prompt("কয়টি সারি (Rows)?", "2");
-    let cols = prompt("কয়টি কলাম (Cols)?", "2");
+    let rows = prompt("Rows?", "2"), cols = prompt("Cols?", "2");
     if (!rows || !cols) return;
     let table = `<table style="width:100%; border-collapse:collapse; margin:10px 0;">`;
-    for (let i = 0; i < rows; i++) {
+    for(let i=0; i<rows; i++) {
         table += `<tr>`;
-        for (let j = 0; j < cols; j++) {
-            table += `<td style="border:1px solid #ccc; padding:8px;">&nbsp;</td>`;
-        }
+        for(let j=0; j<cols; j++) table += `<td style="border:1px solid #ccc; padding:8px;">&nbsp;</td>`;
         table += `</tr>`;
     }
     table += `</table><p></p>`;
@@ -38,50 +25,48 @@ function insertTable() {
 }
 
 function insertMCQ() {
-    const html = `<div style="background:#f9f9f9; padding:15px; border-left:5px solid #c9a84c; margin:10px 0;">
+    const html = `<div style="background:#f8f9fc; padding:15px; border-left:5px solid #c9a84c; margin:10px 0;">
         <strong>প্রশ্ন: </strong> এখানে লিখুন...<br>
-        (ক) অপশন ১ &nbsp; (খ) অপশন ২ &nbsp; (গ) অপশন ৩ &nbsp; (ঘ) অপশন ৪
+        (ক) ____ &nbsp; (খ) ____ &nbsp; (গ) ____ &nbsp; (ঘ) ____
     </div><p></p>`;
     document.execCommand('insertHTML', false, html);
 }
 
-// ২. পেজ স্প্লিটিং অ্যালগরিদম (মাঝখানের ফাঁকা অংশ দূর করার জন্য)
-function generateFullDocument() {
-    const content = contentEditor.innerHTML;
-    const tempDiv = document.createElement('div');
-    tempDiv.style.width = '174mm'; // A4 content width
-    tempDiv.style.visibility = 'hidden';
-    tempDiv.style.position = 'absolute';
-    tempDiv.innerHTML = content;
-    document.body.appendChild(tempDiv);
+// ২. কন্টেন্ট ভাগ করার লজিক (মাঝখানের ফাঁকা অংশ দূর করবে)
+function splitIntoPages() {
+    const temp = document.createElement('div');
+    temp.style.width = '174mm'; // Content width inside A4
+    temp.style.visibility = 'hidden';
+    temp.style.position = 'absolute';
+    temp.style.lineHeight = '1.8';
+    temp.innerHTML = contentEditor.innerHTML;
+    document.body.appendChild(temp);
 
-    const nodes = Array.from(tempDiv.childNodes);
-    let pages = [];
+    const nodes = Array.from(temp.childNodes);
+    const pages = [];
     let currentHTML = "";
-    let currentHeight = 0;
-    const maxHeight = 880; // A4 height limit in px
+    let currentH = 0;
+    const maxH = 880; // Approximate px height for A4
 
     nodes.forEach(node => {
-        let h = (node.nodeType === 1) ? node.offsetHeight : 20;
-        if (currentHeight + h > maxHeight) {
+        let nodeH = (node.nodeType === 1) ? node.offsetHeight : 20;
+        if (currentH + nodeH > maxH) {
             pages.push(currentHTML);
             currentHTML = (node.nodeType === 1) ? node.outerHTML : node.textContent;
-            currentHeight = h;
+            currentH = nodeH;
         } else {
             currentHTML += (node.nodeType === 1) ? node.outerHTML : node.textContent;
-            currentHeight += h;
+            currentH += nodeH;
         }
     });
     if (currentHTML) pages.push(currentHTML);
-    document.body.removeChild(tempDiv);
-
-    let finalHTML = "";
-    pages.forEach((p, i) => finalHTML += generateSinglePage(p, i + 1, pages.length));
-    return finalHTML;
+    document.body.removeChild(temp);
+    return pages;
 }
 
+// ৩. পেজ ডিজাইন জেনারেটর
 function generateSinglePage(html, num, total) {
-    const watermark = showWatermark.checked ? (watermarkText.value || 'Mahmud Sir') : '';
+    const watermark = document.getElementById('showWatermark').checked ? document.getElementById('watermarkText').value : '';
     const isLast = num === total;
     
     return `
@@ -90,40 +75,38 @@ function generateSinglePage(html, num, total) {
             <div class="sheet-header">
                 <div>
                     <div class="sheet-school">⚓ Bangladesh Navy School And College, CTG</div>
-                    <div class="sheet-meta">${sheetClass.value} | ${sheetSubject.value}</div>
+                    <div style="font-size: 8.5pt; color: #555;">${document.getElementById('sheetClass').value} | ${document.getElementById('sheetSubject').value}</div>
                 </div>
-                <div class="sheet-header-right">${teacherName.value}<br>📞 ${teacherMobile.value}</div>
+                <div style="text-align: right; font-size: 8.5pt; color: #555;">
+                    ${document.getElementById('teacherName').value}<br>📞 ${document.getElementById('teacherMobile').value}
+                </div>
             </div>
             <div class="sheet-body">${html}</div>
-            ${showTeacherSignature.checked && isLast ? `<div style="text-align:right; margin-top:20px;"><span style="border-top:1px solid #000; padding-top:5px;">Signature</span></div>` : ''}
-            ${showPageNum.checked ? `<div class="sheet-page-num">পৃষ্ঠা: ${num} / ${total}</div>` : ''}
+            ${document.getElementById('showTeacherSignature').checked && isLast ? `<div style="text-align:right; margin-top:30px;"><span style="border-top:1px solid #000; padding-top:5px; font-weight:600;">${document.getElementById('teacherDesignation').value}</span></div>` : ''}
+            ${document.getElementById('showPageNum').checked ? `<div class="sheet-page-num">পৃষ্ঠা: ${num} / ${total}</div>` : ''}
         </div>`;
 }
 
-// ৩. একশনস
 function previewSheet() {
-    document.getElementById('previewContent').innerHTML = generateFullDocument();
+    const pages = splitIntoPages();
+    let finalHTML = "";
+    pages.forEach((p, i) => finalHTML += generateSinglePage(p, i+1, pages.length));
+    document.getElementById('previewContent').innerHTML = finalHTML;
     document.getElementById('previewModal').classList.remove('hidden');
 }
 
 function downloadPDF() {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`<html><head><link rel="stylesheet" href="style.css"></head><body>${generateFullDocument()}</body></html>`);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); }, 500);
+    window.print();
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function openDownloadModal() { document.getElementById('downloadModal').classList.remove('hidden'); }
 
-// ৪. অটোসেভ ও লোড
-function autoSave() {
-    const data = { content: contentEditor.innerHTML, title: sheetTitle.value };
-    localStorage.setItem('sheetData', JSON.stringify(data));
-}
-
+// ৪. অটো সেভ
 document.addEventListener('DOMContentLoaded', () => {
-    const saved = JSON.parse(localStorage.getItem('sheetData') || '{}');
-    if (saved.content) contentEditor.innerHTML = saved.content;
-    contentEditor.addEventListener('input', autoSave);
+    const saved = localStorage.getItem('pro_sheet_content');
+    if (saved) contentEditor.innerHTML = saved;
+    contentEditor.addEventListener('input', () => {
+        localStorage.setItem('pro_sheet_content', contentEditor.innerHTML);
+    });
 });
