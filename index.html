@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Note Sheet Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&family=Noto+Serif+Bengali:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <div class="logo-emblem">⚓</div>
+      <div class="header-text">
+        <h1>Bangladesh Navy School And College, CTG</h1>
+        <p>Note Sheet Maker — Subject Teacher: Mahmud Sir</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-header" onclick="downloadPDF()">📄 PDF</button>
+      <button class="btn-header btn-header-word" onclick="downloadDOCX()">📝 Word</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <h2 class="sidebar-title">⚙️ Sheet Settings</h2>
+
+      <div class="field-group">
+        <label>Sheet Title</label>
+        <input type="text" id="docTitle" placeholder="e.g. Chapter 3 — ICT Notes" />
+      </div>
+      <div class="field-group">
+        <label>Class &amp; Section</label>
+        <input type="text" id="docClass" placeholder="e.g. Class 9 — Section C" />
+      </div>
+      <div class="field-group">
+        <label>Subject</label>
+        <input type="text" id="docSubject" placeholder="e.g. ICT" value="ICT" />
+      </div>
+
+      <hr class="divider" />
+
+      <div class="toggle-group">
+        <div class="toggle-row">
+          <span>Watermark</span>
+          <label class="toggle"><input type="checkbox" id="showWatermark" checked /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span>Page Numbers</span>
+          <label class="toggle"><input type="checkbox" id="showPageNum" checked /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span>Signature Line</span>
+          <label class="toggle"><input type="checkbox" id="showSignature" checked /><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="sidebar-sections-header">
+        <span>📝 Sections</span>
+        <button class="btn-add-sec" onclick="addSection()">＋ Add</button>
+      </div>
+      <div id="sectionList" class="section-list">
+        <p class="empty-hint">No sections yet. Click "+ Add".</p>
+      </div>
+
+      <hr class="divider" />
+
+      <button class="btn-preview-toggle" onclick="togglePreview()">👁 Toggle Preview</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- RICH TEXT TOOLBAR -->
+    <div class="doc-toolbar" id="docToolbar">
+      <div class="toolbar-group">
+        <select id="fontFamilySelect" class="toolbar-select" onchange="execCmd('fontName', this.value)" title="Font Family">
+          <option value="Noto Serif Bengali, serif">Noto Serif Bengali</option>
+          <option value="Source Sans 3, sans-serif">Source Sans 3</option>
+          <option value="Playfair Display, serif">Playfair Display</option>
+          <option value="Times New Roman, serif">Times New Roman</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Courier New, monospace">Courier New</option>
+        </select>
+        <select id="fontSizeSelect" class="toolbar-select toolbar-select-sm" onchange="execCmd('fontSize', this.value)" title="Font Size">
+          <option value="1">8pt</option>
+          <option value="2">10pt</option>
+          <option value="3" selected>12pt</option>
+          <option value="4">14pt</option>
+          <option value="5">18pt</option>
+          <option value="6">24pt</option>
+          <option value="7">36pt</option>
+        </select>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <button class="tb" onclick="execCmd('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="tb" onclick="execCmd('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button class="tb" onclick="execCmd('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button class="tb" onclick="execCmd('strikeThrough')" title="Strikethrough"><s>S</s></button>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <button class="tb" onclick="execCmd('justifyLeft')" title="Align Left">⬛️≡</button>
+        <button class="tb" onclick="execCmd('justifyCenter')" title="Align Center">≡</button>
+        <button class="tb" onclick="execCmd('justifyRight')" title="Align Right">≡⬛️</button>
+        <button class="tb" onclick="execCmd('justifyFull')" title="Justify">≣</button>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <button class="tb" onclick="execCmd('insertUnorderedList')" title="Bullet List">• List</button>
+        <button class="tb" onclick="execCmd('insertOrderedList')" title="Numbered List">1. List</button>
+        <button class="tb" onclick="execCmd('indent')" title="Indent">→ Tab</button>
+        <button class="tb" onclick="execCmd('outdent')" title="Outdent">← Tab</button>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <button class="tb" onclick="insertHeading('h2')" title="Heading 1">H1</button>
+        <button class="tb" onclick="insertHeading('h3')" title="Heading 2">H2</button>
+        <button class="tb" onclick="insertHeading('h4')" title="Heading 3">H3</button>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <input type="color" id="textColorPicker" class="color-picker" value="#111111" onchange="execCmd('foreColor', this.value)" title="Text Color" />
+        <label for="textColorPicker" class="tb color-btn" title="Text Color">A</label>
+        <input type="color" id="highlightPicker" class="color-picker" value="#ffff00" onchange="execCmd('backColor', this.value)" title="Highlight" />
+        <label for="highlightPicker" class="tb color-btn highlight-btn" title="Highlight">▓</label>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <div class="toolbar-group">
+        <button class="tb" onclick="execCmd('undo')" title="Undo (Ctrl+Z)">↩</button>
+        <button class="tb" onclick="execCmd('redo')" title="Redo (Ctrl+Y)">↪</button>
+        <button class="tb" onclick="execCmd('removeFormat')" title="Clear Formatting">✕ Format</button>
+      </div>
+    </div>
+
+    <!-- DOCUMENT AREA: A4 page with live header -->
+    <div class="doc-canvas" id="docCanvas">
+      <div class="a4-page" id="a4Page">
+
+        <!-- Page header (non-editable, updates from sidebar) -->
+        <div class="page-header" id="pageHeader">
+          <div class="page-school-name">Bangladesh Navy School And College, CTG</div>
+          <div class="page-school-sub">Subject Teacher: Mahmud Sir &nbsp;|&nbsp; 📞 01883100648</div>
+          <div class="page-gold-line"></div>
+          <div class="page-doc-title" id="pageTitleDisplay"></div>
+          <div class="page-meta-row" id="pageMetaDisplay"></div>
+        </div>
+
+        <!-- Sections are rendered inside here -->
+        <div class="page-body" id="pageBody">
+          <div class="no-section-hint" id="noSectionHint">
+            <div style="font-size:2.2rem">📄</div>
+            <p>Left panel থেকে "+ Add" করে একটি section যোগ করুন।</p>
+          </div>
+        </div>
+
+        <!-- Watermarks -->
+        <div class="wm-corner wm-tl" id="wmTL">MAHMUD Sir</div>
+        <div class="wm-corner wm-tr" id="wmTR">MAHMUD Sir</div>
+        <div class="wm-corner wm-bl" id="wmBL">MAHMUD Sir</div>
+        <div class="wm-corner wm-br" id="wmBR">MAHMUD Sir</div>
+        <div class="wm-center" id="wmCenter">MAHMUD</div>
+
+        <!-- Signature -->
+        <div class="page-signature" id="pageSignature">
+          <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Subject Teacher</div></div>
+          <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Class Teacher</div></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="page-footer" id="pageFooter">
+          <span>Bangladesh Navy School And College, CTG — Mahmud Sir</span>
+          <span id="pageNumDisplay">Page 1</span>
+          <span id="footerDate"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
