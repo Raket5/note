@@ -48,6 +48,22 @@
 
       <hr class="divider" />
 
+      <div class="sidebar-title" style="font-size:0.82rem;margin-bottom:10px;">🖊 Teacher Info</div>
+      <div class="field-group">
+        <label>Teacher Name</label>
+        <input type="text" id="teacherName" placeholder="S. M. Mahmud Hasan" value="S. M. Mahmud Hasan" />
+      </div>
+      <div class="field-group">
+        <label>Designation</label>
+        <input type="text" id="teacherDesig" placeholder="Assistant Teacher" value="Assistant Teacher" />
+      </div>
+      <div class="field-group">
+        <label>Watermark Text</label>
+        <input type="text" id="watermarkText" placeholder="Mahmud Sir" value="Mahmud Sir" />
+      </div>
+
+      <hr class="divider" />
+
       <div class="toggle-group">
         <div class="toggle-row">
           <span>Watermark</span>
@@ -72,6 +88,10 @@
       <div id="sectionList" class="section-list">
         <p class="empty-hint">No sections yet. Click "+ Add".</p>
       </div>
+
+      <hr class="divider" />
+
+      <button class="btn-add-page" onclick="addNewPage()">＋ New Page</button>
 
       <hr class="divider" />
 
@@ -158,47 +178,9 @@
       </div>
     </div>
 
-    <!-- DOCUMENT AREA: A4 page with live header -->
+    <!-- DOCUMENT CANVAS: multiple A4 pages -->
     <div class="doc-canvas" id="docCanvas">
-      <div class="a4-page" id="a4Page">
-
-        <!-- Page header (non-editable, updates from sidebar) -->
-        <div class="page-header" id="pageHeader">
-          <div class="page-school-name">Bangladesh Navy School And College, CTG</div>
-          <div class="page-school-sub">Subject Teacher: Mahmud Sir &nbsp;|&nbsp; 📞 01883100648</div>
-          <div class="page-gold-line"></div>
-          <div class="page-doc-title" id="pageTitleDisplay"></div>
-          <div class="page-meta-row" id="pageMetaDisplay"></div>
-        </div>
-
-        <!-- Sections are rendered inside here -->
-        <div class="page-body" id="pageBody">
-          <div class="no-section-hint" id="noSectionHint">
-            <div style="font-size:2.2rem">📄</div>
-            <p>Left panel থেকে "+ Add" করে একটি section যোগ করুন।</p>
-          </div>
-        </div>
-
-        <!-- Watermarks -->
-        <div class="wm-corner wm-tl" id="wmTL">MAHMUD Sir</div>
-        <div class="wm-corner wm-tr" id="wmTR">MAHMUD Sir</div>
-        <div class="wm-corner wm-bl" id="wmBL">MAHMUD Sir</div>
-        <div class="wm-corner wm-br" id="wmBR">MAHMUD Sir</div>
-        <div class="wm-center" id="wmCenter">MAHMUD</div>
-
-        <!-- Signature -->
-        <div class="page-signature" id="pageSignature">
-          <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Subject Teacher</div></div>
-          <div class="sig-block"><div class="sig-line"></div><div class="sig-label">Class Teacher</div></div>
-        </div>
-
-        <!-- Footer -->
-        <div class="page-footer" id="pageFooter">
-          <span>Bangladesh Navy School And College, CTG — Mahmud Sir</span>
-          <span id="pageNumDisplay">Page 1</span>
-          <span id="footerDate"></span>
-        </div>
-      </div>
+      <!-- Pages are rendered here by JS -->
     </div>
   </main>
 
