@@ -15,7 +15,7 @@
   --radius:     8px;
   --toolbar-h:  48px;
   --header-h:   56px;
-  --sidebar-w:  260px;
+  --sidebar-w:  270px;
 }
 
 body {
@@ -137,6 +137,15 @@ body {
 }
 .btn-add-sec:hover { background: var(--navy-mid); }
 
+.btn-add-page {
+  width: 100%; padding: 9px;
+  border: 1.5px dashed var(--navy-light); border-radius: var(--radius);
+  background: #f0f4ff; color: var(--navy);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-add-page:hover { background: #dde6ff; border-color: var(--navy); }
+
 .section-list { display: flex; flex-direction: column; gap: 5px; }
 .empty-hint { font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 12px 0; }
 
@@ -240,7 +249,9 @@ body {
   padding: 32px 40px;
   background: #d8dce6;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px; /* Google Docs-style gap between pages */
 }
 .doc-canvas::-webkit-scrollbar { width: 8px; }
 .doc-canvas::-webkit-scrollbar-thumb { background: #bcc0cc; border-radius: 4px; }
@@ -252,12 +263,24 @@ body {
   background: #fff;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 1px 6px rgba(0,0,0,0.08);
   border-radius: 2px;
-  padding: 42px 56px 80px;
+  padding: 42px 56px 72px;
   position: relative;
   font-family: 'Noto Serif Bengali', 'Source Sans 3', serif;
   color: #111;
   font-size: 11pt;
   line-height: 1.8;
+  flex-shrink: 0;
+}
+
+/* Page indicator badge */
+.page-number-badge {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  font-size: 0.7rem;
+  color: #888;
+  font-family: 'Source Sans 3', sans-serif;
+  letter-spacing: 0.3px;
 }
 
 /* Watermarks */
@@ -271,8 +294,8 @@ body {
 }
 .wm-tl { top: 18px;  left: 16px;  transform: rotate(-20deg); }
 .wm-tr { top: 18px;  right: 16px; transform: rotate(20deg); }
-.wm-bl { bottom: 70px; left: 16px;  transform: rotate(20deg); }
-.wm-br { bottom: 70px; right: 16px; transform: rotate(-20deg); }
+.wm-bl { bottom: 60px; left: 16px;  transform: rotate(20deg); }
+.wm-br { bottom: 60px; right: 16px; transform: rotate(-20deg); }
 .wm-center {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%,-50%) rotate(-30deg);
@@ -284,13 +307,28 @@ body {
 }
 .wm-hidden { display: none !important; }
 
-/* Page Header */
+/* Page Header — only on page 1 */
 .page-header {
   text-align: center;
   border-bottom: 2.5px solid var(--navy);
   padding-bottom: 13px;
   margin-bottom: 18px;
   position: relative; z-index: 1;
+}
+.page-header-cont {
+  /* Continuation header on page 2+ */
+  text-align: center;
+  border-bottom: 1.5px solid var(--navy);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  position: relative; z-index: 1;
+}
+.page-header-cont .cont-school {
+  font-size: 9.5pt; font-weight: 700; color: var(--navy);
+  font-family: 'Playfair Display', serif;
+}
+.page-header-cont .cont-title {
+  font-size: 9pt; color: #555; margin-top: 2px;
 }
 .page-school-name {
   font-size: 13pt; font-weight: 700; color: var(--navy);
@@ -312,7 +350,7 @@ body {
 /* Page Body */
 .page-body {
   position: relative; z-index: 1;
-  min-height: 600px;
+  min-height: 200px;
 }
 
 .no-section-hint {
@@ -362,7 +400,6 @@ body {
   content: attr(data-placeholder);
   color: #bbb; pointer-events: none;
 }
-/* Focus ring on section */
 .doc-section-editor:focus {
   border-left: 2px solid rgba(42,82,152,0.25);
   padding-left: 6px;
@@ -381,32 +418,48 @@ body {
   padding-left: 10pt; color: #555; font-style: italic; margin: 4pt 0;
 }
 
-/* Signature */
+/* ===== SIGNATURE (last page only, left-aligned) ===== */
 .page-signature {
-  display: flex; justify-content: space-between;
-  margin-top: 40px; position: relative; z-index: 1;
+  margin-top: 36px;
+  position: relative; z-index: 1;
+  display: inline-block; /* left-aligned */
 }
 .sig-block { text-align: center; }
-.sig-line { width: 120px; border-bottom: 1.5px solid #333; margin: 0 auto 4px; }
-.sig-label { font-size: 8pt; color: #666; }
+.sig-line { width: 130px; border-bottom: 1.5px solid #333; margin: 0 auto 4px; }
+.sig-name { font-size: 8.5pt; color: #333; font-weight: 600; }
+.sig-desig { font-size: 7.5pt; color: #666; }
+
+/* ===== PAGE DELETE BUTTON ===== */
+.page-delete-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: none; border: none;
+  color: #ccc; font-size: 0.8rem; cursor: pointer;
+  padding: 4px 7px; border-radius: 4px;
+  transition: color 0.1s, background 0.1s;
+  z-index: 10;
+}
+.page-delete-btn:hover { color: #e74c3c; background: #fdf2f2; }
 
 /* Footer */
 .page-footer {
-  position: absolute; bottom: 18px; left: 56px; right: 56px;
+  position: absolute; bottom: 14px; left: 56px; right: 56px;
   display: flex; justify-content: space-between;
   font-size: 8pt; color: #aaa;
   border-top: 1px solid #eee; padding-top: 4px; z-index: 1;
 }
 
-/* ===== PREVIEW MODE (print-like) ===== */
+/* ===== PREVIEW MODE ===== */
 body.preview-mode .doc-section-editor {
   pointer-events: none; user-select: none;
 }
 body.preview-mode .doc-section-title-input { pointer-events: none; }
 body.preview-mode .doc-section-header { border-bottom-color: var(--navy); }
 body.preview-mode .btn-del-sec { display: none; }
+body.preview-mode .page-delete-btn { display: none; }
 body.preview-mode .doc-toolbar { pointer-events: none; opacity: 0.5; }
 body.preview-mode .sidebar .btn-add-sec { pointer-events: none; opacity: 0.6; }
+body.preview-mode .page-number-badge { display: none; }
 
 /* ===== PRINT ===== */
 @media print {
@@ -415,12 +468,17 @@ body.preview-mode .sidebar .btn-add-sec { pointer-events: none; opacity: 0.6; }
   .site-header, .doc-toolbar, .sidebar { display: none !important; }
   .app-shell { display: block; height: auto; overflow: visible; }
   .main-content { height: auto; overflow: visible; }
-  .doc-canvas { padding: 0; background: #fff; display: block; }
+  .doc-canvas { padding: 0; background: #fff; display: block; gap: 0; }
   .a4-page {
     width: 100%; box-shadow: none; border-radius: 0;
-    padding: 16mm 20mm 24mm;
+    padding: 16mm 20mm 22mm;
     min-height: 0;
+    page-break-after: always;
+    break-after: page;
   }
+  .a4-page:last-child { page-break-after: avoid; break-after: avoid; }
+  .page-number-badge { display: none; }
+  .page-delete-btn { display: none; }
   .doc-section-editor:focus { border-left: none; padding-left: 0; margin-left: 0; }
   @page { size: A4; margin: 0; }
 }
