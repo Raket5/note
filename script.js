@@ -1,399 +1,478 @@
-/* ===== RESET ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+// ===== STATE =====
+let sections = [];   // { id, title, pageIndex }
+let pages = [];      // { id }
+let activeSecId = null;
+let activePageId = null;
 
-:root {
-  --navy:       #0f1f45;
-  --navy-mid:   #1a3a6b;
-  --navy-light: #2a5298;
-  --gold:       #c9a84c;
-  --bg-card:    #ffffff;
-  --bg-input:   #f7f9ff;
-  --border:     #dde3f0;
-  --text-main:  #1a1f2e;
-  --text-muted: #6b7280;
-  --radius:     8px;
-  --toolbar-h:  48px;
-  --header-h:   56px;
-  --sidebar-w:  260px;
-}
+// ===== INIT =====
+document.addEventListener("DOMContentLoaded", () => {
+  ["docTitle","docClass","docSubject"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateAllPageHeaders);
+  });
+  ["teacherName","teacherDesig","watermarkText"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateAllPageHeaders);
+  });
+  document.getElementById("showWatermark").addEventListener("change", updateAllPageHeaders);
+  document.getElementById("showPageNum").addEventListener("change", updateAllPageHeaders);
+  document.getElementById("showSignature").addEventListener("change", updateSignatures);
 
-body {
-  font-family: 'Source Sans 3', 'Noto Serif Bengali', sans-serif;
-  background: #e8eaf0;
-  color: var(--text-main);
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+  // Start with one blank page
+  createPage();
+  updateAllPageHeaders();
+});
 
-/* ===== HEADER ===== */
-.site-header {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-  height: var(--header-h);
-  display: flex; align-items: center;
-  padding: 0 20px;
-  flex-shrink: 0; z-index: 200;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-.header-inner { display: flex; align-items: center; width: 100%; gap: 14px; }
-.header-logo  { display: flex; align-items: center; gap: 12px; flex: 1; }
-.logo-emblem  { font-size: 1.6rem; }
-.header-text h1 { font-size: 0.92rem; font-weight: 700; color: #fff; font-family: 'Playfair Display', serif; }
-.header-text p  { font-size: 0.73rem; color: #b8c8e8; margin-top: 1px; }
-.header-actions { display: flex; gap: 8px; flex-shrink: 0; }
-.btn-header {
-  padding: 6px 14px; border-radius: 6px;
-  border: 1.5px solid rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.1);
-  color: #fff; font-size: 0.8rem; font-weight: 600;
-  cursor: pointer; transition: background 0.15s;
-}
-.btn-header:hover { background: rgba(255,255,255,0.22); }
-.btn-header-word { border-color: var(--gold); color: var(--gold); }
-.btn-header-word:hover { background: rgba(201,168,76,0.15); }
+// ===== PAGE CREATION =====
+function createPage() {
+  const pageId = "pg_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+  pages.push({ id: pageId });
+  activePageId = pageId;
 
-/* ===== APP SHELL ===== */
-.app-shell {
-  display: flex;
-  height: calc(100vh - var(--header-h));
-  overflow: hidden;
-}
+  const canvas = document.getElementById("docCanvas");
+  const pageNum = pages.length;
 
-/* ===== SIDEBAR ===== */
-.sidebar {
-  width: var(--sidebar-w);
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
-  height: 100%; overflow-y: auto; flex-shrink: 0;
-}
-.sidebar-inner { padding: 16px 14px; }
-.sidebar-title {
-  font-size: 0.88rem; font-weight: 700; color: var(--navy);
-  margin-bottom: 14px; padding-bottom: 9px;
-  border-bottom: 2px solid var(--gold);
-}
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "relative";
+  wrapper.style.width = "794px";
+  wrapper.dataset.pageWrapper = pageId;
 
-.field-group { margin-bottom: 10px; }
-.field-group label {
-  display: block; font-size: 0.7rem; font-weight: 600;
-  color: var(--text-muted); margin-bottom: 3px;
-  text-transform: uppercase; letter-spacing: 0.4px;
-}
-.field-group input {
-  width: 100%; padding: 7px 10px;
-  border: 1.5px solid var(--border); border-radius: var(--radius);
-  background: var(--bg-input); color: var(--text-main);
-  font-size: 0.84rem;
-  font-family: 'Source Sans 3', 'Noto Serif Bengali', sans-serif;
-  outline: none; transition: border-color 0.15s;
-}
-.field-group input:focus { border-color: var(--navy-light); }
+  const badge = document.createElement("div");
+  badge.className = "page-number-badge";
+  badge.textContent = `Page ${pageNum}`;
+  wrapper.appendChild(badge);
 
-.divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  const page = document.createElement("div");
+  page.className = "a4-page";
+  page.id = pageId;
+  page.dataset.pageIndex = pageNum - 1;
 
-.toggle-group { display: flex; flex-direction: column; gap: 8px; }
-.toggle-row {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 0.82rem; color: var(--text-main);
-}
-.toggle { position: relative; display: inline-block; width: 34px; height: 18px; }
-.toggle input { opacity: 0; width: 0; height: 0; }
-.toggle-slider {
-  position: absolute; inset: 0;
-  background: #d1d5db; border-radius: 20px;
-  cursor: pointer; transition: background 0.2s;
-}
-.toggle-slider::before {
-  content: ""; position: absolute;
-  width: 12px; height: 12px; left: 3px; top: 3px;
-  background: #fff; border-radius: 50%;
-  transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.toggle input:checked + .toggle-slider { background: var(--gold); }
-.toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+  // Delete button (only show if more than 1 page)
+  const delBtn = document.createElement("button");
+  delBtn.className = "page-delete-btn";
+  delBtn.title = "Delete this page";
+  delBtn.textContent = "✕ Page";
+  delBtn.onclick = () => deletePage(pageId);
+  page.appendChild(delBtn);
 
-.sidebar-sections-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 8px; font-size: 0.82rem; font-weight: 700; color: var(--navy);
-}
-.btn-add-sec {
-  background: var(--navy); color: #fff;
-  border: none; border-radius: 5px;
-  padding: 3px 9px; font-size: 0.75rem; font-weight: 600;
-  cursor: pointer; transition: background 0.15s;
-}
-.btn-add-sec:hover { background: var(--navy-mid); }
+  // Page header
+  const header = document.createElement("div");
+  header.dataset.pageHeader = pageId;
+  page.appendChild(header);
 
-.section-list { display: flex; flex-direction: column; gap: 5px; }
-.empty-hint { font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 12px 0; }
+  // Page body
+  const body = document.createElement("div");
+  body.className = "page-body";
+  body.id = "body_" + pageId;
+  body.innerHTML = `<div class="no-section-hint" id="hint_${pageId}">
+    <div style="font-size:2.2rem">📄</div>
+    <p>Left panel থেকে "+ Add" করে একটি section যোগ করুন।</p>
+  </div>`;
+  page.appendChild(body);
 
-.sec-item {
-  background: var(--bg-input); border: 1.5px solid var(--border);
-  border-radius: var(--radius); padding: 7px 9px;
-  display: flex; justify-content: space-between; align-items: center;
-  cursor: pointer; transition: border-color 0.15s;
-}
-.sec-item:hover { border-color: var(--navy-light); }
-.sec-item.active { border-color: var(--gold); background: #fffbf0; }
-.sec-item-name { font-size: 0.8rem; font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-.sec-item-actions { display: flex; gap: 2px; flex-shrink: 0; }
-.btn-sm {
-  background: none; border: none; cursor: pointer;
-  font-size: 0.75rem; padding: 2px 4px; border-radius: 4px;
-  transition: background 0.1s; color: var(--text-muted);
-}
-.btn-sm:hover { background: var(--border); color: #e74c3c; }
+  // Watermarks (injected per page)
+  ["wm-tl","wm-tr","wm-bl","wm-br"].forEach(cls => {
+    const wm = document.createElement("div");
+    wm.className = `wm-corner ${cls}`;
+    wm.dataset.wmCorner = pageId;
+    page.appendChild(wm);
+  });
+  const wmC = document.createElement("div");
+  wmC.className = "wm-center";
+  wmC.dataset.wmCenter = pageId;
+  page.appendChild(wmC);
 
-.btn-preview-toggle {
-  width: 100%; padding: 9px;
-  border: 1.5px solid var(--border); border-radius: var(--radius);
-  background: var(--bg-input); color: var(--text-main);
-  font-size: 0.82rem; font-weight: 600; cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-.btn-preview-toggle:hover { border-color: var(--navy-light); background: #eef2ff; }
+  // Signature placeholder (only last page)
+  const sig = document.createElement("div");
+  sig.dataset.sigBlock = pageId;
+  page.appendChild(sig);
 
-/* ===== MAIN CONTENT ===== */
-.main-content {
-  flex: 1; display: flex; flex-direction: column;
-  overflow: hidden; background: #e8eaf0;
+  // Footer
+  const footer = document.createElement("div");
+  footer.className = "page-footer";
+  footer.dataset.footer = pageId;
+  page.appendChild(footer);
+
+  wrapper.appendChild(page);
+  canvas.appendChild(wrapper);
+
+  renderPageHeader(pageId);
+  renderWatermarks(pageId);
+  renderFooter(pageId);
+  renderSignatures();
+  updateDeleteButtons();
+
+  return pageId;
 }
 
-/* ===== TOOLBAR ===== */
-.doc-toolbar {
-  height: var(--toolbar-h);
-  background: #fff; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-  padding: 0 12px; gap: 2px;
-  flex-shrink: 0; overflow-x: auto;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  flex-wrap: nowrap;
-}
-.doc-toolbar::-webkit-scrollbar { height: 3px; }
-.doc-toolbar::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+function deletePage(pageId) {
+  if (pages.length <= 1) { alert("কমপক্ষে একটি page থাকতে হবে।"); return; }
+  if (!confirm("এই page টি delete করবেন? এর সব section মুছে যাবে।")) return;
 
-.toolbar-group { display: flex; align-items: center; gap: 1px; }
-.tb {
-  min-width: 28px; height: 28px;
-  background: none; border: none; border-radius: 4px;
-  font-size: 0.8rem; font-weight: 600;
-  cursor: pointer; color: var(--text-main);
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 5px; transition: background 0.1s; white-space: nowrap;
-}
-.tb:hover { background: #e8eaf0; }
-.tb:active { background: #d0d4e8; }
-.toolbar-select {
-  height: 28px; padding: 0 6px;
-  border: 1px solid var(--border); border-radius: 4px;
-  font-size: 0.75rem; background: #fff; color: var(--text-main);
-  outline: none; cursor: pointer;
-}
-.toolbar-select:focus { border-color: var(--navy-light); }
-.toolbar-select-sm { width: 62px; }
-.toolbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
-.color-picker { display: none; }
-.color-btn {
-  font-size: 0.9rem; font-weight: 800;
-  text-decoration: underline;
-  text-decoration-color: var(--gold);
-  text-decoration-thickness: 3px;
-  cursor: pointer;
-}
-.highlight-btn { text-decoration-color: #00cc88; color: #222; }
+  // Remove sections of this page
+  sections = sections.filter(s => {
+    if (s.pageId === pageId) {
+      const el = document.getElementById("ds_" + s.id);
+      if (el) el.remove();
+      return false;
+    }
+    return true;
+  });
 
-/* ===== DOCUMENT CANVAS — pages stack vertically ===== */
-.doc-canvas {
-  flex: 1;
-  overflow-y: auto;
-  padding: 32px 40px 60px;
-  background: #cfd3de;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 28px;   /* visible gap between pages */
-}
-.doc-canvas::-webkit-scrollbar { width: 8px; }
-.doc-canvas::-webkit-scrollbar-thumb { background: #b0b4c0; border-radius: 4px; }
+  pages = pages.filter(p => p.id !== pageId);
+  if (activePageId === pageId) activePageId = pages[pages.length - 1].id;
 
-/* ===== A4 PAGE ===== */
-.a4-page {
-  width: 794px;
-  min-height: 1123px;
-  background: #fff;
-  box-shadow: 0 4px 28px rgba(0,0,0,0.18), 0 1px 6px rgba(0,0,0,0.08);
-  border-radius: 2px;
-  padding: 42px 56px 90px;
-  position: relative;
-  font-family: 'Noto Serif Bengali', 'Source Sans 3', serif;
-  color: #111; font-size: 11pt; line-height: 1.8;
-  flex-shrink: 0;
+  const wrapper = document.querySelector(`[data-page-wrapper="${pageId}"]`);
+  if (wrapper) wrapper.remove();
+
+  // Re-number badges
+  document.querySelectorAll(".page-number-badge").forEach((badge, i) => {
+    badge.textContent = `Page ${i + 1}`;
+  });
+
+  renderSectionList();
+  updateDeleteButtons();
+  renderSignatures();
+  updatePageNumLabels();
 }
 
-/* ===== WATERMARKS ===== */
-.wm-corner {
-  position: absolute;
-  font-size: 8.5pt; font-weight: 700;
-  color: rgba(15,31,69,0.07);
-  font-family: 'Playfair Display', serif;
-  letter-spacing: 2px;
-  pointer-events: none; user-select: none; z-index: 0;
-}
-.wm-tl { top: 18px;    left: 18px;  transform: rotate(-20deg); }
-.wm-tr { top: 18px;    right: 18px; transform: rotate(20deg); }
-.wm-bl { bottom: 72px; left: 18px;  transform: rotate(20deg); }
-.wm-br { bottom: 72px; right: 18px; transform: rotate(-20deg); }
-.wm-center {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%,-50%) rotate(-30deg);
-  font-size: 56pt; font-weight: 900;
-  color: rgba(15,31,69,0.028);
-  font-family: 'Playfair Display', serif;
-  pointer-events: none; user-select: none; z-index: 0;
-  white-space: nowrap;
-}
-/* body class controls visibility */
-body.wm-off .wm-el { display: none !important; }
-
-/* ===== PAGE 1 HEADER ===== */
-.page-header {
-  text-align: center;
-  border-bottom: 2.5px solid var(--navy);
-  padding-bottom: 13px; margin-bottom: 18px;
-  position: relative; z-index: 1;
-}
-.page-school-name { font-size: 13pt; font-weight: 700; color: var(--navy); font-family: 'Playfair Display', serif; }
-.page-school-sub  { font-size: 8.5pt; color: #555; margin-top: 2px; }
-.page-gold-line   { width: 56px; height: 2px; background: var(--gold); margin: 7px auto; border-radius: 2px; }
-.page-doc-title   { font-size: 12.5pt; font-weight: 700; color: var(--navy); font-family: 'Noto Serif Bengali','Playfair Display',serif; }
-.page-meta-row    { display: flex; justify-content: center; gap: 22px; margin-top: 6px; font-size: 9pt; color: #444; flex-wrap: wrap; }
-.page-meta-row b  { color: var(--navy); }
-
-/* ===== CONTINUATION HEADER (page 2, 3 ...) ===== */
-.cont-header {
-  border-bottom: 1.5px solid var(--navy);
-  padding-bottom: 6px; margin-bottom: 16px;
-  display: flex; justify-content: space-between; align-items: baseline;
-  position: relative; z-index: 1;
-}
-.cont-school { font-size: 8.5pt; color: var(--navy); font-weight: 700; font-family: 'Playfair Display', serif; }
-.cont-title  { font-size: 8.5pt; color: #666; }
-
-/* ===== PAGE BODY ===== */
-.page-body { position: relative; z-index: 1; min-height: 200px; }
-
-.no-section-hint {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 300px; gap: 10px;
-  color: var(--text-muted); font-size: 0.9rem; text-align: center;
+function addNewPage() {
+  const pageId = createPage();
+  // Scroll to new page
+  const el = document.getElementById(pageId);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-/* ===== SECTION BLOCK ===== */
-.doc-section { margin-bottom: 22px; }
-
-.doc-section-header {
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1.5px solid var(--navy);
-  padding-bottom: 3px; margin-bottom: 10px;
-}
-.doc-section-title-input {
-  flex: 1; border: none; outline: none;
-  font-size: 11pt; font-weight: 700; color: var(--navy);
-  font-family: 'Noto Serif Bengali', serif;
-  background: transparent; padding: 2px 0;
-}
-.doc-section-title-input::placeholder { color: #aaa; font-weight: 400; }
-.btn-del-sec {
-  background: none; border: none; cursor: pointer;
-  font-size: 0.8rem; color: #bbb; padding: 2px 5px;
-  border-radius: 4px; transition: color 0.1s, background 0.1s; flex-shrink: 0;
-}
-.btn-del-sec:hover { color: #e74c3c; background: #fdf2f2; }
-
-.doc-section-editor {
-  min-height: 80px; outline: none;
-  font-family: 'Noto Serif Bengali','Source Sans 3',serif;
-  font-size: 10.5pt; line-height: 1.85; color: #111;
-  caret-color: var(--navy); word-break: break-word;
-}
-.doc-section-editor:empty::before {
-  content: attr(data-placeholder);
-  color: #bbb; pointer-events: none;
-}
-.doc-section-editor:focus {
-  border-left: 2px solid rgba(42,82,152,0.22);
-  padding-left: 6px; margin-left: -8px;
-}
-.doc-section-editor h2 { font-size: 13pt; font-weight: 700; color: var(--navy); margin: 8pt 0 3pt; }
-.doc-section-editor h3 { font-size: 11.5pt; font-weight: 700; color: var(--navy-mid); margin: 6pt 0 2pt; }
-.doc-section-editor h4 { font-size: 10.5pt; font-weight: 600; color: #1a3a6b; margin: 4pt 0 2pt; }
-.doc-section-editor ul  { padding-left: 20pt; }
-.doc-section-editor ol  { padding-left: 20pt; }
-.doc-section-editor li  { margin-bottom: 2pt; }
-.doc-section-editor blockquote { border-left: 3px solid var(--gold); padding-left: 10pt; color: #555; font-style: italic; margin: 4pt 0; }
-
-/* ===== SIGNATURE (card style, left-aligned) ===== */
-.page-signature {
-  margin-top: 30px;
-  position: relative; z-index: 1;
-  display: block;
-}
-.sig-card {
-  display: inline-block;
-  text-align: left;
-}
-.sig-top-line {
-  width: 160px; height: 1.5px;
-  background: #666; margin-bottom: 7px;
-}
-.sig-name   { font-size: 10pt; font-weight: 700; color: var(--navy); line-height: 1.5; }
-.sig-role   { font-size: 8.5pt; color: #444; line-height: 1.5; }
-.sig-school { font-size: 8.5pt; color: #444; line-height: 1.5; }
-.sig-phone  { font-size: 8.5pt; color: #555; margin-top: 2px; line-height: 1.5; }
-
-/* ===== PAGE FOOTER ===== */
-.page-footer {
-  position: absolute; bottom: 18px; left: 56px; right: 56px;
-  display: flex; justify-content: space-between;
-  font-size: 8pt; color: #aaa;
-  border-top: 1px solid #eee; padding-top: 4px; z-index: 1;
+function updateDeleteButtons() {
+  document.querySelectorAll(".page-delete-btn").forEach(btn => {
+    btn.style.display = pages.length > 1 ? "block" : "none";
+  });
 }
 
-/* Toggle visibility via body classes */
-body.pgnum-off .page-num-el { display: none !important; }
-body.sig-off .page-signature { display: none !important; }
+// ===== PAGE HEADER RENDERING =====
+function renderPageHeader(pageId) {
+  const el = document.querySelector(`[data-page-header="${pageId}"]`);
+  if (!el) return;
 
-/* ===== PREVIEW MODE ===== */
-body.preview-mode .doc-section-editor { pointer-events: none; user-select: none; }
-body.preview-mode .doc-section-title-input { pointer-events: none; }
-body.preview-mode .btn-del-sec { display: none; }
-body.preview-mode .doc-toolbar { pointer-events: none; opacity: 0.45; }
-body.preview-mode .btn-add-sec { pointer-events: none; opacity: 0.6; }
+  const title   = document.getElementById("docTitle").value.trim();
+  const cls     = document.getElementById("docClass").value.trim();
+  const subject = document.getElementById("docSubject").value.trim();
+  const teacher = document.getElementById("teacherName").value.trim() || "S. M. Mahmud Hasan";
+  const desig   = document.getElementById("teacherDesig").value.trim() || "Assistant Teacher";
+  const pageIndex = pages.findIndex(p => p.id === pageId);
+  const isFirst = pageIndex === 0;
 
-/* ===== PRINT ===== */
-@media print {
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  body { height: auto; overflow: visible; background: #fff !important; }
-  .site-header, .doc-toolbar, .sidebar { display: none !important; }
-  .app-shell { display: block; height: auto; overflow: visible; }
-  .main-content { height: auto; overflow: visible; }
-  .doc-canvas { padding: 0; background: #fff; gap: 0; display: block; }
-  .a4-page {
-    width: 100%; box-shadow: none; border-radius: 0;
-    padding: 16mm 20mm 26mm; min-height: 0;
-    page-break-after: always; break-after: page;
+  if (isFirst) {
+    let metaParts = [];
+    if (cls) metaParts.push(`<b>Class:</b> ${escHtml(cls)}`);
+    if (subject) metaParts.push(`<b>Subject:</b> ${escHtml(subject)}`);
+
+    el.className = "page-header";
+    el.innerHTML = `
+      <div class="page-school-name">Bangladesh Navy School And College, CTG</div>
+      <div class="page-school-sub">Subject Teacher: ${escHtml(teacher)} &nbsp;|&nbsp; ${escHtml(desig)}</div>
+      <div class="page-gold-line"></div>
+      ${title ? `<div class="page-doc-title">${escHtml(title)}</div>` : ""}
+      ${metaParts.length ? `<div class="page-meta-row">${metaParts.map(p => `<span>${p}</span>`).join("")}</div>` : ""}
+    `;
+  } else {
+    el.className = "page-header-cont";
+    el.innerHTML = `
+      <div class="cont-school">Bangladesh Navy School And College, CTG</div>
+      ${title ? `<div class="cont-title">${escHtml(title)}${cls ? ` — ${escHtml(cls)}` : ""}</div>` : ""}
+    `;
   }
-  .a4-page:last-child { page-break-after: avoid; break-after: avoid; }
-  .doc-section-editor:focus { border-left: none; padding-left: 0; margin-left: 0; }
-  @page { size: A4; margin: 0; }
 }
 
-@media (max-width: 900px) {
-  .app-shell { flex-direction: column; height: auto; overflow: auto; }
-  .sidebar { width: 100%; height: auto; }
-  .main-content { height: 80vh; }
-  .a4-page { width: 100%; }
-  .doc-canvas { padding: 14px; gap: 14px; }
+function updateAllPageHeaders() {
+  pages.forEach(p => renderPageHeader(p.id));
+  updateWatermarkText();
+  updatePageNumLabels();
+}
+
+// ===== WATERMARKS =====
+function updateWatermarkText() {
+  const wmText = document.getElementById("watermarkText").value.trim() || "Mahmud Sir";
+  const show   = document.getElementById("showWatermark").checked;
+
+  document.querySelectorAll("[data-wm-corner]").forEach(el => {
+    el.textContent = wmText;
+    el.classList.toggle("wm-hidden", !show);
+  });
+  document.querySelectorAll("[data-wm-center]").forEach(el => {
+    el.textContent = wmText;
+    el.classList.toggle("wm-hidden", !show);
+  });
+}
+
+function renderWatermarks(pageId) {
+  updateWatermarkText(); // will handle this page too
+}
+
+// ===== FOOTER =====
+function renderFooter(pageId) {
+  const el = document.querySelector(`[data-footer="${pageId}"]`);
+  if (!el) return;
+  const teacher = document.getElementById("teacherName").value.trim() || "S. M. Mahmud Hasan";
+  const showNum = document.getElementById("showPageNum").checked;
+  const pageNum = pages.findIndex(p => p.id === pageId) + 1;
+
+  el.innerHTML = `
+    <span>Bangladesh Navy School And College, CTG — ${escHtml(teacher)}</span>
+    <span style="display:${showNum ? 'inline' : 'none'}">Page ${pageNum}</span>
+  `;
+}
+
+function updatePageNumLabels() {
+  pages.forEach((p, i) => renderFooter(p.id));
+  // Update badge texts
+  document.querySelectorAll(".page-number-badge").forEach((badge, i) => {
+    badge.textContent = `Page ${i + 1}`;
+  });
+}
+
+// ===== SIGNATURES — only last page, left-aligned =====
+function renderSignatures() {
+  pages.forEach((p, i) => {
+    const el = document.querySelector(`[data-sig-block="${p.id}"]`);
+    if (!el) return;
+    const isLast = i === pages.length - 1;
+    const show   = document.getElementById("showSignature").checked;
+    const teacher = document.getElementById("teacherName").value.trim() || "S. M. Mahmud Hasan";
+    const desig   = document.getElementById("teacherDesig").value.trim() || "Assistant Teacher";
+
+    if (isLast && show) {
+      el.innerHTML = `
+        <div class="page-signature">
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${escHtml(teacher)}</div>
+            <div class="sig-desig">${escHtml(desig)}</div>
+          </div>
+        </div>`;
+    } else {
+      el.innerHTML = "";
+    }
+  });
+}
+
+function updateSignatures() {
+  renderSignatures();
+}
+
+// ===== SECTION MANAGEMENT =====
+function addSection() {
+  // Add to the currently active/last page
+  const pageId = activePageId || (pages.length ? pages[pages.length - 1].id : null);
+  if (!pageId) { addNewPage(); return; }
+
+  const title = prompt("Section title (optional):", "") ?? "";
+  const id = "sec_" + Date.now();
+  sections.push({ id, title: title.trim(), pageId });
+  renderSectionList();
+  renderPageBody(pageId);
+  focusSection(id);
+}
+
+function deleteSection(id) {
+  if (!confirm("Delete this section?")) return;
+  const sec = sections.find(s => s.id === id);
+  sections = sections.filter(s => s.id !== id);
+  if (activeSecId === id) activeSecId = sections.length ? sections[sections.length - 1].id : null;
+  renderSectionList();
+  const el = document.getElementById("ds_" + id);
+  if (el) el.remove();
+
+  // Show hint if page has no more sections
+  if (sec) {
+    const pageSections = sections.filter(s => s.pageId === sec.pageId);
+    if (!pageSections.length) {
+      const hint = document.getElementById("hint_" + sec.pageId);
+      if (hint) hint.style.display = "flex";
+    }
+  }
+}
+
+function focusSection(id) {
+  activeSecId = id;
+  const sec = sections.find(s => s.id === id);
+  if (sec) activePageId = sec.pageId;
+  renderSectionList();
+  const editor = document.getElementById("ed_" + id);
+  if (editor) {
+    editor.focus();
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+function updateSectionTitle(id, val) {
+  const sec = sections.find(s => s.id === id);
+  if (sec) sec.title = val;
+  renderSectionList();
+}
+
+function renderSectionList() {
+  const list = document.getElementById("sectionList");
+  if (!sections.length) {
+    list.innerHTML = '<p class="empty-hint">No sections. Click "+ Add".</p>';
+    return;
+  }
+  list.innerHTML = sections.map(s => {
+    const pageNum = pages.findIndex(p => p.id === s.pageId) + 1;
+    return `
+    <div class="sec-item ${activeSecId === s.id ? 'active' : ''}" onclick="focusSection('${s.id}')">
+      <div>
+        <div class="sec-item-name">${escHtml(s.title || "(No title)")}</div>
+        <div style="font-size:0.68rem;color:#999;">Pg ${pageNum}</div>
+      </div>
+      <div class="sec-item-actions">
+        <button class="btn-sm" onclick="deleteSection('${s.id}');event.stopPropagation();" title="Delete">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderPageBody(pageId) {
+  const body = document.getElementById("body_" + pageId);
+  const hint = document.getElementById("hint_" + pageId);
+  if (!body) return;
+
+  const pageSections = sections.filter(s => s.pageId === pageId);
+  pageSections.forEach(sec => {
+    if (document.getElementById("ds_" + sec.id)) return;
+    const div = document.createElement("div");
+    div.className = "doc-section";
+    div.id = "ds_" + sec.id;
+    div.innerHTML = `
+      <div class="doc-section-header">
+        <input type="text"
+          class="doc-section-title-input"
+          placeholder="Section title (optional)"
+          value="${escHtmlAttr(sec.title)}"
+          oninput="updateSectionTitle('${sec.id}', this.value)"
+        />
+        <button class="btn-del-sec" onclick="deleteSection('${sec.id}')" title="Delete section">✕</button>
+      </div>
+      <div class="doc-section-editor"
+        id="ed_${sec.id}"
+        contenteditable="true"
+        spellcheck="true"
+        data-placeholder="এখানে লিখুন... (টাইপ করুন বা paste করুন)"
+        onfocus="activeSecId='${sec.id}';activePageId='${pageId}';renderSectionList();"
+      ></div>`;
+    body.appendChild(div);
+  });
+
+  if (pageSections.length && hint) hint.style.display = "none";
+}
+
+// ===== RICH TEXT COMMANDS =====
+function execCmd(cmd, value) {
+  document.execCommand(cmd, false, value ?? null);
+  const editor = getActiveEditor();
+  if (editor) editor.focus();
+}
+
+function getActiveEditor() {
+  if (activeSecId) return document.getElementById("ed_" + activeSecId);
+  return document.querySelector(".doc-section-editor:focus");
+}
+
+function insertHeading(tag) {
+  const editor = getActiveEditor();
+  if (!editor) return;
+  editor.focus();
+  document.execCommand('formatBlock', false, tag);
+}
+
+// ===== TOGGLE PREVIEW =====
+let previewMode = false;
+function togglePreview() {
+  previewMode = !previewMode;
+  document.body.classList.toggle("preview-mode", previewMode);
+  const btn = document.querySelector(".btn-preview-toggle");
+  btn.textContent = previewMode ? "✏️ Edit Mode" : "👁 Toggle Preview";
+}
+
+// ===== PDF DOWNLOAD =====
+function downloadPDF() {
+  window.print();
+}
+
+// ===== WORD DOWNLOAD =====
+function downloadDOCX() {
+  const title   = document.getElementById("docTitle").value.trim() || "Sheet";
+  const cls     = document.getElementById("docClass").value.trim();
+  const subject = document.getElementById("docSubject").value.trim();
+  const teacher = document.getElementById("teacherName").value.trim() || "S. M. Mahmud Hasan";
+  const desig   = document.getElementById("teacherDesig").value.trim() || "Assistant Teacher";
+  const signature = document.getElementById("showSignature").checked;
+
+  let bodyHTML = "";
+  sections.forEach(sec => {
+    const editor = document.getElementById("ed_" + sec.id);
+    if (!editor) return;
+    if (sec.title) bodyHTML += `<h2 style="font-size:11pt;font-weight:700;color:#0f1f45;border-bottom:1pt solid #0f1f45;margin:14pt 0 6pt;padding-bottom:2pt;font-family:'Noto Serif Bengali',serif;">${escHtml(sec.title)}</h2>`;
+    bodyHTML += `<div style="font-size:10.5pt;line-height:1.85;font-family:'Noto Serif Bengali',serif;margin-bottom:12pt;">${editor.innerHTML}</div>`;
+  });
+
+  const wordHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+    <style>
+      body{font-family:'Noto Serif Bengali','Times New Roman',serif;margin:2cm 2.5cm;font-size:10.5pt;color:#000;}
+      h1{font-size:13pt;text-align:center;color:#0f1f45;margin-bottom:2pt;font-family:'Playfair Display','Times New Roman',serif;}
+      h2{font-size:11pt;font-weight:700;color:#0f1f45;border-bottom:1pt solid #0f1f45;margin:14pt 0 6pt;padding-bottom:2pt;}
+      h3{font-size:12pt;color:#0f1f45;margin:8pt 0 3pt;}
+      h4{font-size:11pt;color:#1a3a6b;margin:6pt 0 3pt;}
+      .meta{text-align:center;font-size:9pt;color:#555;margin-bottom:14pt;border-bottom:2pt solid #0f1f45;padding-bottom:8pt;}
+      .gold-line{width:60pt;height:2pt;background:#c9a84c;margin:6pt auto;}
+      p,div{margin:0 0 5pt;line-height:1.85;}
+      ul,ol{padding-left:18pt;margin:0 0 8pt;}
+      li{margin-bottom:3pt;line-height:1.75;}
+      .sig-block{margin-top:40pt;display:inline-block;text-align:center;width:130pt;}
+      .sig-line{border-bottom:1pt solid #333;margin-bottom:4pt;height:20pt;}
+      .sig-name{font-size:8.5pt;color:#333;font-weight:600;}
+      .sig-desig{font-size:7.5pt;color:#666;}
+      .footer{font-size:8pt;color:#aaa;border-top:1pt solid #eee;padding-top:4pt;margin-top:16pt;display:flex;justify-content:space-between;}
+    </style>
+  </head><body>
+    <h1>Bangladesh Navy School And College, CTG</h1>
+    <div class="meta">
+      Subject Teacher: ${escHtml(teacher)} | ${escHtml(desig)}<br/>
+      <div class="gold-line"></div>
+      ${title ? `<strong>${escHtml(title)}</strong><br/>` : ""}
+      ${cls ? `Class: ${escHtml(cls)}` : ""}${subject ? ` | Subject: ${escHtml(subject)}` : ""}
+    </div>
+    ${bodyHTML}
+    ${signature ? `
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-name">${escHtml(teacher)}</div>
+      <div class="sig-desig">${escHtml(desig)}</div>
+    </div>` : ""}
+    <div class="footer"><span>Bangladesh Navy School And College, CTG — ${escHtml(teacher)}</span></div>
+  </body></html>`;
+
+  const blob = new Blob(["\ufeff" + wordHTML], { type: "application/msword" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url;
+  a.download = `${title}.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== UTILS =====
+function escHtml(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function escHtmlAttr(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
 }
