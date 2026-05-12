@@ -1,206 +1,429 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Note Sheet</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600;700&family=Noto+Serif+Bengali:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Note Sheet Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#0f1f45;
+  --gold:#c9a84c;
+  --page-w:794px;
+  --page-h:1123px;
+  --margin-top:38px;
+  --margin-side:56px;
+  --margin-bottom:52px;
+  --header-h:72px;   /* fixed top band height */
+  --footer-h:28px;   /* fixed bottom band height */
+}
+
+body{
+  font-family:'Libre Baskerville','Times New Roman',serif;
+  background:#c8ccd6;
+  margin:0; padding:0;
+  min-height:100vh;
+}
+
+/* ── APP BAR ── */
+.app-bar{
+  position:fixed; top:0; left:0; right:0; z-index:999;
+  background:var(--navy);
+  height:46px; display:flex; align-items:center;
+  padding:0 18px; gap:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+.app-bar-title{
+  font-size:.82rem; font-weight:700; color:#fff; letter-spacing:.3px;
+  flex:1;
+}
+.btn-bar{
+  padding:5px 14px; border-radius:5px;
+  border:1.5px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.1); color:#fff;
+  font-size:.78rem; font-weight:600; cursor:pointer;
+  transition:background .15s;
+}
+.btn-bar:hover{background:rgba(255,255,255,.22);}
+.btn-bar.gold{border-color:var(--gold);color:var(--gold);}
+.btn-bar.gold:hover{background:rgba(201,168,76,.15);}
+
+/* ── CANVAS ── */
+#canvas{
+  padding:60px 0 40px;
+  display:flex; flex-direction:column; align-items:center; gap:28px;
+}
+
+/* ── A4 PAGE ── */
+.page{
+  width:var(--page-w);
+  height:var(--page-h);
+  background:#fff;
+  position:relative;
+  box-shadow:0 4px 24px rgba(0,0,0,.22);
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+/* Fixed header band */
+.page-header{
+  position:absolute;
+  top:0; left:0; right:0;
+  height:var(--header-h);
+  padding:0 var(--margin-side);
+  display:flex; flex-direction:column; justify-content:center;
+  border-bottom:2px solid var(--navy);
+  background:#fff; z-index:5;
+}
+.hdr-row1{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:9.5pt; color:#333;
+}
+.hdr-school{
+  font-size:10.5pt; font-weight:700; color:var(--navy);
+  font-family:'Libre Baskerville',serif;
+}
+.hdr-teacher{font-size:8.5pt; color:#555;}
+.hdr-row2{
+  display:flex; justify-content:space-between; align-items:baseline;
+  margin-top:4px;
+}
+.hdr-subject{font-size:9pt; color:#333;}
+.hdr-class{font-size:9pt; color:#333;}
+
+/* Fixed footer band */
+.page-footer{
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:var(--footer-h);
+  padding:0 var(--margin-side);
+  display:flex; align-items:center; justify-content:space-between;
+  border-top:1px solid #ddd;
+  background:#fff; z-index:5;
+  font-size:8pt; color:#aaa;
+}
+
+/* Scrollable content area */
+.page-body{
+  position:absolute;
+  top:var(--header-h);
+  bottom:var(--footer-h);
+  left:var(--margin-side);
+  right:var(--margin-side);
+  overflow:hidden;        /* clip to page — no scroll */
+  padding:14px 0 8px;
+}
+
+/* Watermark */
+.watermark{
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%) rotate(-30deg);
+  font-size:64pt; font-weight:700; letter-spacing:4px;
+  color:rgba(15,31,69,.028);
+  font-family:'Libre Baskerville',serif;
+  pointer-events:none; user-select:none; white-space:nowrap;
+  z-index:0;
+}
+
+/* ── CONTENT TYPES ── */
+.content-area{
+  font-size:10.5pt;
+  line-height:1.82;
+  color:#111;
+  font-family:'Libre Baskerville','Times New Roman',serif;
+  outline:none;
+  width:100%;
+}
+.content-area:empty::before{
+  content:"এখানে লিখুন...";
+  color:#bbb;
+}
+
+/* Signature */
+.signature{
+  margin-top:28px;
+  display:inline-block;
+  text-align:center;
+}
+.sig-line{width:130px; border-bottom:1.5px solid #333; margin-bottom:4px;}
+.sig-name{font-size:8.5pt; font-weight:700; color:#333;}
+.sig-desig{font-size:7.5pt; color:#666;}
+
+/* ── SIDE PANEL ── */
+#panel{
+  position:fixed; top:46px; right:0; bottom:0; width:260px;
+  background:#fff; border-left:1px solid #dde3f0;
+  overflow-y:auto; z-index:100;
+  padding:16px 14px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.panel-title{
+  font-size:.82rem; font-weight:700; color:var(--navy);
+  border-bottom:2px solid var(--gold);
+  padding-bottom:7px; margin-bottom:4px;
+}
+.field label{
+  display:block; font-size:.68rem; font-weight:700;
+  color:#888; text-transform:uppercase; letter-spacing:.4px;
+  margin-bottom:3px;
+}
+.field input{
+  width:100%; padding:6px 9px;
+  border:1.5px solid #dde3f0; border-radius:6px;
+  font-size:.82rem; font-family:inherit; outline:none;
+  transition:border-color .15s;
+}
+.field input:focus{border-color:var(--navy);}
+.divider{border:none; border-top:1px solid #eee; margin:4px 0;}
+.toggle-row{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:.8rem; color:#333;
+}
+.toggle{position:relative; width:34px; height:18px; display:inline-block;}
+.toggle input{opacity:0; width:0; height:0;}
+.toggle-slider{
+  position:absolute; inset:0; background:#d1d5db;
+  border-radius:20px; cursor:pointer; transition:background .2s;
+}
+.toggle-slider::before{
+  content:""; position:absolute;
+  width:12px; height:12px; left:3px; top:3px;
+  background:#fff; border-radius:50%;
+  box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .2s;
+}
+.toggle input:checked+.toggle-slider{background:var(--gold);}
+.toggle input:checked+.toggle-slider::before{transform:translateX(16px);}
+.btn-panel{
+  width:100%; padding:8px; border-radius:6px;
+  border:1.5px dashed var(--navy); background:#f4f6fb;
+  color:var(--navy); font-size:.8rem; font-weight:700;
+  cursor:pointer; transition:background .15s;
+}
+.btn-panel:hover{background:#e4e9f6;}
+
+/* canvas shifts left when panel open */
+#canvas{padding-right:260px; padding-left:0;}
+
+/* ── PRINT ── */
+@media print{
+  .app-bar,#panel{display:none!important;}
+  body{background:#fff;}
+  #canvas{padding:0; gap:0; display:block;}
+  .page{
+    width:210mm; height:297mm;
+    box-shadow:none;
+    page-break-after:always; break-after:page;
+    overflow:hidden;
+  }
+  .page:last-child{page-break-after:avoid; break-after:avoid;}
+  @page{size:A4; margin:0;}
+}
+</style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="header-inner">
-    <div class="header-logo">
-      <div class="logo-emblem">⚓</div>
-      <div class="header-text">
-        <h1>Bangladesh Navy School And College, CTG</h1>
-        <p>Note Sheet Maker — Subject Teacher: Mahmud Sir</p>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button class="btn-header" onclick="downloadPDF()">📄 PDF</button>
-      <button class="btn-header btn-header-word" onclick="downloadDOCX()">📝 Word</button>
-    </div>
-  </div>
-</header>
-
-<div class="app-shell">
-
-  <!-- LEFT SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-      <h2 class="sidebar-title">⚙️ Sheet Settings</h2>
-
-      <div class="field-group">
-        <label>Sheet Title</label>
-        <input type="text" id="docTitle" placeholder="e.g. Chapter 3 — ICT Notes" />
-      </div>
-      <div class="field-group">
-        <label>Class &amp; Section</label>
-        <input type="text" id="docClass" placeholder="e.g. Class 9 — Section C" />
-      </div>
-      <div class="field-group">
-        <label>Subject</label>
-        <input type="text" id="docSubject" placeholder="e.g. ICT" value="ICT" />
-      </div>
-
-      <hr class="divider" />
-
-      <p class="sidebar-title" style="font-size:0.82rem;margin-bottom:10px;">🖊 Teacher Info</p>
-      <div class="field-group">
-        <label>Teacher Name</label>
-        <input type="text" id="teacherName" value="S. M. Mahmud Hasan" />
-      </div>
-      <div class="field-group">
-        <label>Designation</label>
-        <input type="text" id="teacherDesig" value="Assistant Teacher" />
-      </div>
-      <div class="field-group">
-        <label>Watermark Text</label>
-        <input type="text" id="watermarkText" value="Mahmud Sir" />
-      </div>
-
-      <hr class="divider" />
-
-      <div class="toggle-group">
-        <div class="toggle-row">
-          <span>Watermark</span>
-          <label class="toggle"><input type="checkbox" id="showWatermark" checked /><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <span>Signature Line</span>
-          <label class="toggle"><input type="checkbox" id="showSignature" checked /><span class="toggle-slider"></span></label>
-        </div>
-      </div>
-
-      <hr class="divider" />
-
-      <div class="sidebar-sections-header">
-        <span>📝 Sections</span>
-        <button class="btn-add-sec" onclick="addSection()">＋ Add</button>
-      </div>
-      <div id="sectionList" class="section-list">
-        <p class="empty-hint">No sections yet. Click "+ Add".</p>
-      </div>
-
-      <hr class="divider" />
-
-      <button class="btn-preview-toggle" onclick="togglePreview()">👁 Toggle Preview</button>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-
-    <!-- TOOLBAR -->
-    <div class="doc-toolbar">
-      <div class="toolbar-group">
-        <select class="toolbar-select" onchange="execCmd('fontName', this.value)">
-          <option value="Noto Serif Bengali, serif">Noto Serif Bengali</option>
-          <option value="Source Sans 3, sans-serif">Source Sans 3</option>
-          <option value="Playfair Display, serif">Playfair Display</option>
-          <option value="Times New Roman, serif">Times New Roman</option>
-          <option value="Arial, sans-serif">Arial</option>
-          <option value="Georgia, serif">Georgia</option>
-          <option value="Courier New, monospace">Courier New</option>
-        </select>
-        <select class="toolbar-select toolbar-select-sm" onchange="execCmd('fontSize', this.value)">
-          <option value="1">8pt</option>
-          <option value="2">10pt</option>
-          <option value="3" selected>12pt</option>
-          <option value="4">14pt</option>
-          <option value="5">18pt</option>
-          <option value="6">24pt</option>
-          <option value="7">36pt</option>
-        </select>
-      </div>
-      <div class="toolbar-sep"></div>
-      <div class="toolbar-group">
-        <button class="tb" onclick="execCmd('bold')"><b>B</b></button>
-        <button class="tb" onclick="execCmd('italic')"><i>I</i></button>
-        <button class="tb" onclick="execCmd('underline')"><u>U</u></button>
-        <button class="tb" onclick="execCmd('strikeThrough')"><s>S</s></button>
-      </div>
-      <div class="toolbar-sep"></div>
-      <div class="toolbar-group">
-        <button class="tb" onclick="execCmd('justifyLeft')">◀≡</button>
-        <button class="tb" onclick="execCmd('justifyCenter')">≡</button>
-        <button class="tb" onclick="execCmd('justifyRight')">≡▶</button>
-        <button class="tb" onclick="execCmd('justifyFull')">≣</button>
-      </div>
-      <div class="toolbar-sep"></div>
-      <div class="toolbar-group">
-        <button class="tb" onclick="execCmd('insertUnorderedList')">• List</button>
-        <button class="tb" onclick="execCmd('insertOrderedList')">1. List</button>
-        <button class="tb" onclick="execCmd('indent')">→ Tab</button>
-        <button class="tb" onclick="execCmd('outdent')">← Tab</button>
-      </div>
-      <div class="toolbar-sep"></div>
-      <div class="toolbar-group">
-        <button class="tb" onclick="insertHeading('h2')">H1</button>
-        <button class="tb" onclick="insertHeading('h3')">H2</button>
-        <button class="tb" onclick="insertHeading('h4')">H3</button>
-      </div>
-      <div class="toolbar-sep"></div>
-      <div class="toolbar-group">
-        <input type="color" id="textColorPicker" class="color-picker" value="#111111" onchange="execCmd('foreColor', this.value)" />
-        <label for="textColorPicker" class="tb color-btn">A</label>
-        <input type="color" id="highlightPicker" class="color-picker" value="#ffff00" onchange="execCmd('backColor', this.value)" />
-        <label for="highlightPicker" class="tb color-btn highlight-btn">▓</label>
-      </div>
-      <div class="toolbar-sep"></div>
-      <div class="toolbar-group">
-        <button class="tb" onclick="execCmd('undo')">↩</button>
-        <button class="tb" onclick="execCmd('redo')">↪</button>
-        <button class="tb" onclick="execCmd('removeFormat')">✕ Fmt</button>
-      </div>
-    </div>
-
-    <!-- CANVAS -->
-    <div class="doc-canvas" id="docCanvas">
-      <div class="a4-wrapper" id="a4Wrapper">
-
-        <!-- Header -->
-        <div class="page-header" id="pageHeader">
-          <div class="page-school-name">Bangladesh Navy School And College, CTG</div>
-          <div class="page-school-sub" id="pageSchoolSub"></div>
-          <div class="page-gold-line"></div>
-          <div class="page-doc-title" id="pageTitleDisplay"></div>
-          <div class="page-meta-row" id="pageMetaDisplay"></div>
-        </div>
-
-        <!-- Sections -->
-        <div class="page-body" id="pageBody">
-          <div class="no-section-hint" id="noSectionHint">
-            <div style="font-size:2.2rem">📄</div>
-            <p>Left panel থেকে "+ Add" করে section যোগ করুন।</p>
-          </div>
-        </div>
-
-        <!-- Watermarks -->
-        <div class="wm-corner wm-tl" id="wmTL"></div>
-        <div class="wm-corner wm-tr" id="wmTR"></div>
-        <div class="wm-corner wm-bl" id="wmBL"></div>
-        <div class="wm-corner wm-br" id="wmBR"></div>
-        <div class="wm-center"      id="wmCenter"></div>
-
-        <!-- Signature -->
-        <div id="pageSignature"></div>
-
-        <!-- Footer -->
-        <div class="page-footer">
-          <span id="footerLeft"></span>
-          <span id="footerRight"></span>
-        </div>
-
-      </div>
-    </div>
-
-  </main>
+<!-- APP BAR -->
+<div class="app-bar">
+  <span class="app-bar-title">⚓ Note Sheet Maker — Bangladesh Navy School And College, CTG</span>
+  <button class="btn-bar gold" onclick="addPage()">＋ Page</button>
+  <button class="btn-bar" onclick="window.print()">🖨 Print / PDF</button>
 </div>
 
-<script src="script.js"></script>
+<!-- CANVAS -->
+<div id="canvas"></div>
+
+<!-- SIDE PANEL -->
+<div id="panel">
+  <div class="panel-title">⚙️ Settings</div>
+
+  <div class="field"><label>Sheet Title</label>
+    <input id="iTitle" placeholder="e.g. English 2nd Written Part" oninput="updateHeaders()"/>
+  </div>
+  <div class="field"><label>Class</label>
+    <input id="iClass" value="Six" oninput="updateHeaders()"/>
+  </div>
+  <div class="field"><label>Subject</label>
+    <input id="iSubject" value="English" oninput="updateHeaders()"/>
+  </div>
+
+  <div class="divider"></div>
+  <div class="field"><label>Teacher Name</label>
+    <input id="iTeacher" value="S. M. Mahmud Hasan" oninput="updateHeaders()"/>
+  </div>
+  <div class="field"><label>Designation</label>
+    <input id="iDesig" value="Assistant Teacher" oninput="updateHeaders()"/>
+  </div>
+  <div class="field"><label>Watermark</label>
+    <input id="iWatermark" value="Mahmud Sir" oninput="updateWatermarks()"/>
+  </div>
+
+  <div class="divider"></div>
+  <div class="toggle-row">
+    <span>Show Watermark</span>
+    <label class="toggle"><input type="checkbox" id="tWatermark" checked onchange="updateWatermarks()"><span class="toggle-slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span>Page Numbers</span>
+    <label class="toggle"><input type="checkbox" id="tPageNum" checked onchange="updateFooters()"><span class="toggle-slider"></span></label>
+  </div>
+  <div class="toggle-row">
+    <span>Signature (last page)</span>
+    <label class="toggle"><input type="checkbox" id="tSig" checked onchange="updateSignatures()"><span class="toggle-slider"></span></label>
+  </div>
+
+  <div class="divider"></div>
+  <button class="btn-panel" onclick="addPage()">＋ Add New Page</button>
+</div>
+
+<script>
+let pages=[];
+
+/* ── INIT ── */
+document.addEventListener("DOMContentLoaded",()=>{
+  addPage();
+  // seed first page with sample content
+  const ed=document.querySelector('.content-area');
+  if(ed) ed.innerHTML=`<p><b>Compositions</b></p>
+<p><b>1. Your Aim in Life</b></p>
+<p>Every person has an aim in life. Without an aim life becomes meaningless. A man cannot reach success without having a clear aim.</p>
+<p>My aim in life is to become a doctor. A doctor serves sick and helpless people. Many poor people in our country cannot get proper medical treatment. I want to help them when I grow up.</p>
+<p>To achieve my aim I study regularly and work hard. I believe that honesty and hard work can help me reach my goal.</p>
+<p>I hope one day I will be able to serve my country and people as a good doctor.</p>
+<p><b>2. Student Life</b></p>
+<p>Student life is the best period of human life. It is the time of learning and preparation for the future. During this time students gain knowledge and build their character.</p>
+<p>The main duty of a student is to study regularly. Students should respect their teachers and parents. They should also take part in games and physical exercise.</p>
+<p>A good student always follows discipline and makes good use of time. If students work hard in student life, they can become successful in the future.</p>
+<p>So student life is very important for everyone.</p>`;
+});
+
+/* ── ADD PAGE ── */
+function addPage(){
+  const id="pg_"+Date.now();
+  pages.push(id);
+  const pgNum=pages.length;
+
+  const page=document.createElement("div");
+  page.className="page"; page.id=id;
+
+  /* watermark */
+  const wm=document.createElement("div");
+  wm.className="watermark"; wm.dataset.wm=id;
+  wm.textContent=document.getElementById("iWatermark").value||"Mahmud Sir";
+  if(!document.getElementById("tWatermark").checked) wm.style.display="none";
+  page.appendChild(wm);
+
+  /* header */
+  const hdr=document.createElement("div");
+  hdr.className="page-header"; hdr.dataset.hdr=id;
+  page.appendChild(hdr);
+
+  /* body */
+  const body=document.createElement("div");
+  body.className="page-body";
+  const ed=document.createElement("div");
+  ed.className="content-area"; ed.contentEditable="true"; ed.spellcheck=true;
+  ed.dataset.ed=id;
+  body.appendChild(ed);
+
+  /* signature placeholder */
+  const sigHolder=document.createElement("div");
+  sigHolder.dataset.sigHolder=id;
+  body.appendChild(sigHolder);
+
+  page.appendChild(body);
+
+  /* footer */
+  const ftr=document.createElement("div");
+  ftr.className="page-footer"; ftr.dataset.ftr=id;
+  page.appendChild(ftr);
+
+  document.getElementById("canvas").appendChild(page);
+
+  renderHeader(id);
+  renderFooter(id);
+  updateSignatures();
+  updateDeleteBtns();
+
+  /* scroll to new page */
+  if(pgNum>1) page.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+/* ── HEADER ── */
+function renderHeader(id){
+  const el=document.querySelector(`[data-hdr="${id}"]`);
+  if(!el) return;
+  const teacher=v("iTeacher")||"S. M. Mahmud Hasan";
+  const desig=v("iDesig")||"Assistant Teacher";
+  const title=v("iTitle");
+  const cls=v("iClass");
+  const subj=v("iSubject");
+  el.innerHTML=`
+    <div class="hdr-row1">
+      <span class="hdr-school">Bangladesh Navy School And College, CTG</span>
+      <span class="hdr-teacher">Teacher: ${esc(teacher)} | ${esc(desig)}</span>
+    </div>
+    <div class="hdr-row2">
+      <span class="hdr-subject">${title?esc(title)+(subj?' &nbsp;|&nbsp; Subject: '+esc(subj):''):(subj?'Subject: '+esc(subj):'')}</span>
+      <span class="hdr-class">${cls?'Class: '+esc(cls):''}</span>
+    </div>`;
+}
+
+function updateHeaders(){pages.forEach(renderHeader);}
+
+/* ── FOOTER ── */
+function renderFooter(id){
+  const el=document.querySelector(`[data-ftr="${id}"]`);
+  if(!el) return;
+  const teacher=v("iTeacher")||"S. M. Mahmud Hasan";
+  const pgNum=pages.indexOf(id)+1;
+  const showNum=document.getElementById("tPageNum").checked;
+  el.innerHTML=`<span>${esc(teacher)}</span>${showNum?`<span>Page ${pgNum}</span>`:''}`;
+}
+
+function updateFooters(){pages.forEach(renderFooter);}
+
+/* ── WATERMARKS ── */
+function updateWatermarks(){
+  const txt=v("iWatermark")||"Mahmud Sir";
+  const show=document.getElementById("tWatermark").checked;
+  document.querySelectorAll("[data-wm]").forEach(el=>{
+    el.textContent=txt;
+    el.style.display=show?"":"none";
+  });
+}
+
+/* ── SIGNATURES ── */
+function updateSignatures(){
+  const show=document.getElementById("tSig").checked;
+  const teacher=v("iTeacher")||"S. M. Mahmud Hasan";
+  const desig=v("iDesig")||"Assistant Teacher";
+  pages.forEach((id,i)=>{
+    const el=document.querySelector(`[data-sig-holder="${id}"]`);
+    if(!el) return;
+    const isLast=i===pages.length-1;
+    if(show && isLast){
+      el.innerHTML=`<div class="signature">
+        <div class="sig-line"></div>
+        <div class="sig-name">${esc(teacher)}</div>
+        <div class="sig-desig">${esc(desig)}</div>
+      </div>`;
+    } else {
+      el.innerHTML="";
+    }
+  });
+}
+
+/* ── DELETE BUTTONS ── */
+function updateDeleteBtns(){
+  // no delete buttons — keep it clean like the PDF
+}
+
+/* ── UTILS ── */
+function v(id){return document.getElementById(id).value.trim();}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+</script>
 </body>
 </html>
