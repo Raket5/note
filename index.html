@@ -3,223 +3,221 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Note Sheet Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+<title>Note</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Noto+Serif+Bengali:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
   --navy:#0f1f45;
   --gold:#c9a84c;
   --page-w:794px;
   --page-h:1123px;
-  --margin-top:38px;
   --margin-side:56px;
-  --margin-bottom:52px;
-  --header-h:72px;   /* fixed top band height */
-  --footer-h:28px;   /* fixed bottom band height */
+  --header-h:72px;
+  --footer-h:28px;
+  --toolbar-h:42px;
+  --appbar-h:46px;
 }
-
 body{
   font-family:'Libre Baskerville','Times New Roman',serif;
-  background:#c8ccd6;
-  margin:0; padding:0;
-  min-height:100vh;
+  background:#c8ccd6; margin:0; padding:0; min-height:100vh;
 }
 
 /* ── APP BAR ── */
 .app-bar{
   position:fixed; top:0; left:0; right:0; z-index:999;
-  background:var(--navy);
-  height:46px; display:flex; align-items:center;
-  padding:0 18px; gap:14px;
+  background:var(--navy); height:var(--appbar-h);
+  display:flex; align-items:center; padding:0 18px; gap:12px;
   box-shadow:0 2px 8px rgba(0,0,0,.35);
 }
-.app-bar-title{
-  font-size:.82rem; font-weight:700; color:#fff; letter-spacing:.3px;
-  flex:1;
-}
+.app-bar-title{font-size:.82rem;font-weight:700;color:#fff;flex:1;}
 .btn-bar{
-  padding:5px 14px; border-radius:5px;
+  padding:5px 13px; border-radius:5px;
   border:1.5px solid rgba(255,255,255,.35);
   background:rgba(255,255,255,.1); color:#fff;
-  font-size:.78rem; font-weight:600; cursor:pointer;
-  transition:background .15s;
+  font-size:.78rem; font-weight:600; cursor:pointer; transition:background .15s;
 }
 .btn-bar:hover{background:rgba(255,255,255,.22);}
 .btn-bar.gold{border-color:var(--gold);color:var(--gold);}
 .btn-bar.gold:hover{background:rgba(201,168,76,.15);}
 
+/* ── TOOLBAR ── */
+#toolbar{
+  position:fixed; top:var(--appbar-h); left:0; right:261px; z-index:998;
+  background:#f3f3f3; border-bottom:1px solid #d0d0d0;
+  height:var(--toolbar-h); display:flex; align-items:center;
+  padding:0 10px; gap:3px; overflow-x:auto; flex-wrap:nowrap;
+  box-shadow:0 1px 4px rgba(0,0,0,.1);
+}
+#toolbar::-webkit-scrollbar{height:3px;}
+#toolbar::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+
+.tb-sep{width:1px;height:22px;background:#ccc;margin:0 4px;flex-shrink:0;}
+.tb-group{display:flex;align-items:center;gap:1px;flex-shrink:0;}
+
+.tb-btn{
+  min-width:28px; height:26px; padding:0 5px;
+  background:none; border:1px solid transparent;
+  border-radius:3px; font-size:.8rem; font-weight:600;
+  cursor:pointer; color:#222; display:flex; align-items:center;
+  justify-content:center; white-space:nowrap; transition:background .1s,border-color .1s;
+  font-family:inherit;
+}
+.tb-btn:hover{background:#e0e0e0;border-color:#bbb;}
+.tb-btn.active{background:#d0d8ff;border-color:#8899dd;}
+
+.tb-select{
+  height:26px; padding:0 4px; border:1px solid #ccc;
+  border-radius:3px; font-size:.75rem; background:#fff;
+  color:#222; outline:none; cursor:pointer;
+}
+.tb-select:focus{border-color:var(--navy);}
+.tb-select-sm{width:56px;}
+
+.color-input{display:none;}
+.color-label{
+  min-width:28px; height:26px; padding:0 6px;
+  background:none; border:1px solid transparent;
+  border-radius:3px; font-size:.85rem; font-weight:800;
+  cursor:pointer; display:flex; align-items:center;
+  justify-content:center; flex-direction:column;
+  transition:background .1s; line-height:1;
+}
+.color-label:hover{background:#e0e0e0;border-color:#bbb;}
+.color-bar{display:block;height:3px;width:14px;border-radius:1px;margin-top:2px;}
+
 /* ── CANVAS ── */
 #canvas{
-  padding:60px 0 40px;
-  display:flex; flex-direction:column; align-items:center; gap:28px;
+  padding-top:calc(var(--appbar-h) + var(--toolbar-h) + 28px);
+  padding-bottom:40px; padding-right:261px;
+  display:flex; flex-direction:column; align-items:center; gap:32px;
 }
+
+/* ── PAGE WRAPPER ── */
+.page-wrap{position:relative; width:var(--page-w);}
+.page-label{
+  font-size:.7rem; color:#888; font-family:sans-serif;
+  position:absolute; top:-22px; left:0;
+  display:flex; align-items:center; gap:8px;
+}
+.btn-del-page{
+  background:#e74c3c; color:#fff; border:none; border-radius:4px;
+  font-size:.68rem; font-weight:700; padding:2px 9px;
+  cursor:pointer; transition:background .15s;
+}
+.btn-del-page:hover{background:#c0392b;}
 
 /* ── A4 PAGE ── */
 .page{
-  width:var(--page-w);
-  height:var(--page-h);
-  background:#fff;
-  position:relative;
+  width:var(--page-w); height:var(--page-h);
+  background:#fff; position:relative;
   box-shadow:0 4px 24px rgba(0,0,0,.22);
-  overflow:hidden;
-  flex-shrink:0;
+  overflow:hidden; flex-shrink:0;
 }
 
-/* Fixed header band */
+/* Header */
 .page-header{
-  position:absolute;
-  top:0; left:0; right:0;
-  height:var(--header-h);
+  position:absolute; top:0; left:0; right:0; height:var(--header-h);
   padding:0 var(--margin-side);
   display:flex; flex-direction:column; justify-content:center;
-  border-bottom:2px solid var(--navy);
-  background:#fff; z-index:5;
+  border-bottom:2px solid var(--navy); background:#fff; z-index:5;
 }
-.hdr-row1{
-  display:flex; justify-content:space-between; align-items:baseline;
-  font-size:9.5pt; color:#333;
-}
-.hdr-school{
-  font-size:10.5pt; font-weight:700; color:var(--navy);
-  font-family:'Libre Baskerville',serif;
-}
-.hdr-teacher{font-size:8.5pt; color:#555;}
-.hdr-row2{
-  display:flex; justify-content:space-between; align-items:baseline;
-  margin-top:4px;
-}
-.hdr-subject{font-size:9pt; color:#333;}
-.hdr-class{font-size:9pt; color:#333;}
+.hdr-row1{display:flex;justify-content:space-between;align-items:baseline;}
+.hdr-school{font-size:10.5pt;font-weight:700;color:var(--navy);font-family:'Libre Baskerville',serif;}
+.hdr-teacher{font-size:8.5pt;color:#555;}
+.hdr-row2{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;}
+.hdr-subject{font-size:9pt;color:#333;}
+.hdr-class{font-size:9pt;color:#333;}
 
-/* Fixed footer band */
+/* Footer */
 .page-footer{
-  position:absolute;
-  bottom:0; left:0; right:0;
-  height:var(--footer-h);
+  position:absolute; bottom:0; left:0; right:0; height:var(--footer-h);
   padding:0 var(--margin-side);
   display:flex; align-items:center; justify-content:space-between;
-  border-top:1px solid #ddd;
-  background:#fff; z-index:5;
+  border-top:1px solid #ddd; background:#fff; z-index:5;
   font-size:8pt; color:#aaa;
 }
 
-/* Scrollable content area */
+/* Body */
 .page-body{
   position:absolute;
-  top:var(--header-h);
-  bottom:var(--footer-h);
-  left:var(--margin-side);
-  right:var(--margin-side);
-  overflow:hidden;        /* clip to page — no scroll */
-  padding:14px 0 8px;
+  top:var(--header-h); bottom:var(--footer-h);
+  left:var(--margin-side); right:var(--margin-side);
+  overflow:hidden; padding:14px 0 8px;
 }
 
 /* Watermark */
 .watermark{
-  position:absolute;
-  top:50%; left:50%;
+  position:absolute; top:50%; left:50%;
   transform:translate(-50%,-50%) rotate(-30deg);
   font-size:64pt; font-weight:700; letter-spacing:4px;
-  color:rgba(15,31,69,.028);
-  font-family:'Libre Baskerville',serif;
-  pointer-events:none; user-select:none; white-space:nowrap;
-  z-index:0;
+  color:rgba(15,31,69,.028); font-family:'Libre Baskerville',serif;
+  pointer-events:none; user-select:none; white-space:nowrap; z-index:0;
 }
 
-/* ── CONTENT TYPES ── */
+/* Editable */
 .content-area{
-  font-size:10.5pt;
-  line-height:1.82;
-  color:#111;
+  font-size:10.5pt; line-height:1.82; color:#111;
   font-family:'Libre Baskerville','Times New Roman',serif;
-  outline:none;
-  width:100%;
+  outline:none; width:100%;
 }
-.content-area:empty::before{
-  content:"এখানে লিখুন...";
-  color:#bbb;
-}
+.content-area:empty::before{content:"এখানে লিখুন...";color:#bbb;pointer-events:none;}
 
 /* Signature */
-.signature{
-  margin-top:28px;
-  display:inline-block;
-  text-align:center;
-}
-.sig-line{width:130px; border-bottom:1.5px solid #333; margin-bottom:4px;}
-.sig-name{font-size:8.5pt; font-weight:700; color:#333;}
-.sig-desig{font-size:7.5pt; color:#666;}
+.signature{margin-top:28px;display:inline-block;text-align:center;}
+.sig-line{width:130px;border-bottom:1.5px solid #333;margin-bottom:4px;}
+.sig-name{font-size:8.5pt;font-weight:700;color:#333;}
+.sig-desig{font-size:7.5pt;color:#666;}
 
 /* ── SIDE PANEL ── */
 #panel{
-  position:fixed; top:46px; right:0; bottom:0; width:260px;
+  position:fixed; top:var(--appbar-h); right:0; bottom:0; width:261px;
   background:#fff; border-left:1px solid #dde3f0;
-  overflow-y:auto; z-index:100;
-  padding:16px 14px;
-  display:flex; flex-direction:column; gap:10px;
+  overflow-y:auto; z-index:100; padding:14px 13px;
+  display:flex; flex-direction:column; gap:9px;
 }
 .panel-title{
-  font-size:.82rem; font-weight:700; color:var(--navy);
-  border-bottom:2px solid var(--gold);
-  padding-bottom:7px; margin-bottom:4px;
+  font-size:.82rem;font-weight:700;color:var(--navy);
+  border-bottom:2px solid var(--gold);padding-bottom:7px;margin-bottom:2px;
 }
 .field label{
-  display:block; font-size:.68rem; font-weight:700;
-  color:#888; text-transform:uppercase; letter-spacing:.4px;
-  margin-bottom:3px;
+  display:block;font-size:.67rem;font-weight:700;color:#888;
+  text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;
 }
 .field input{
-  width:100%; padding:6px 9px;
-  border:1.5px solid #dde3f0; border-radius:6px;
-  font-size:.82rem; font-family:inherit; outline:none;
-  transition:border-color .15s;
+  width:100%;padding:6px 9px;border:1.5px solid #dde3f0;border-radius:6px;
+  font-size:.82rem;font-family:inherit;outline:none;transition:border-color .15s;
 }
 .field input:focus{border-color:var(--navy);}
-.divider{border:none; border-top:1px solid #eee; margin:4px 0;}
-.toggle-row{
-  display:flex; justify-content:space-between; align-items:center;
-  font-size:.8rem; color:#333;
-}
-.toggle{position:relative; width:34px; height:18px; display:inline-block;}
-.toggle input{opacity:0; width:0; height:0;}
-.toggle-slider{
-  position:absolute; inset:0; background:#d1d5db;
-  border-radius:20px; cursor:pointer; transition:background .2s;
-}
+.divider{border:none;border-top:1px solid #eee;margin:2px 0;}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:#333;}
+.toggle{position:relative;width:34px;height:18px;display:inline-block;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:20px;cursor:pointer;transition:background .2s;}
 .toggle-slider::before{
-  content:""; position:absolute;
-  width:12px; height:12px; left:3px; top:3px;
-  background:#fff; border-radius:50%;
-  box-shadow:0 1px 3px rgba(0,0,0,.2); transition:transform .2s;
+  content:"";position:absolute;width:12px;height:12px;left:3px;top:3px;
+  background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s;
 }
 .toggle input:checked+.toggle-slider{background:var(--gold);}
 .toggle input:checked+.toggle-slider::before{transform:translateX(16px);}
 .btn-panel{
-  width:100%; padding:8px; border-radius:6px;
-  border:1.5px dashed var(--navy); background:#f4f6fb;
-  color:var(--navy); font-size:.8rem; font-weight:700;
-  cursor:pointer; transition:background .15s;
+  width:100%;padding:8px;border-radius:6px;
+  border:1.5px dashed var(--navy);background:#f4f6fb;
+  color:var(--navy);font-size:.8rem;font-weight:700;
+  cursor:pointer;transition:background .15s;
 }
 .btn-panel:hover{background:#e4e9f6;}
 
-/* canvas shifts left when panel open */
-#canvas{padding-right:260px; padding-left:0;}
-
 /* ── PRINT ── */
 @media print{
-  .app-bar,#panel{display:none!important;}
+  .app-bar,#panel,#toolbar{display:none!important;}
   body{background:#fff;}
-  #canvas{padding:0; gap:0; display:block;}
-  .page{
-    width:210mm; height:297mm;
-    box-shadow:none;
-    page-break-after:always; break-after:page;
-    overflow:hidden;
-  }
-  .page:last-child{page-break-after:avoid; break-after:avoid;}
-  @page{size:A4; margin:0;}
+  #canvas{padding:0;gap:0;display:block;}
+  .page-label{display:none!important;}
+  .page-wrap{width:210mm;}
+  .page{width:210mm;height:297mm;box-shadow:none;page-break-after:always;break-after:page;overflow:hidden;}
+  .page:last-child{page-break-after:avoid;break-after:avoid;}
+  @page{size:A4;margin:0;}
 }
 </style>
 </head>
@@ -232,6 +230,88 @@ body{
   <button class="btn-bar" onclick="window.print()">🖨 Print / PDF</button>
 </div>
 
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="tb-group">
+    <select class="tb-select" style="width:140px;" id="selFont" onchange="cmd('fontName',this.value)" title="Font Family">
+      <option value="Libre Baskerville, serif">Libre Baskerville</option>
+      <option value="Noto Serif Bengali, serif">Noto Serif Bengali</option>
+      <option value="Times New Roman, serif">Times New Roman</option>
+      <option value="Arial, sans-serif">Arial</option>
+      <option value="Georgia, serif">Georgia</option>
+      <option value="Courier New, monospace">Courier New</option>
+      <option value="Verdana, sans-serif">Verdana</option>
+    </select>
+    <select class="tb-select tb-select-sm" id="selSize" onchange="cmd('fontSize',this.value)" title="Font Size">
+      <option value="1">8</option>
+      <option value="2">10</option>
+      <option value="3" selected>12</option>
+      <option value="4">14</option>
+      <option value="5">18</option>
+      <option value="6">24</option>
+      <option value="7">36</option>
+    </select>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <button class="tb-btn" id="btnB" onclick="cmd('bold')"          title="Bold (Ctrl+B)"><b>B</b></button>
+    <button class="tb-btn" id="btnI" onclick="cmd('italic')"        title="Italic (Ctrl+I)"><i>I</i></button>
+    <button class="tb-btn" id="btnU" onclick="cmd('underline')"     title="Underline (Ctrl+U)"><u>U</u></button>
+    <button class="tb-btn" id="btnS" onclick="cmd('strikeThrough')" title="Strikethrough"><s>S</s></button>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <button class="tb-btn" onclick="cmd('justifyLeft')"   title="Align Left">&#9664;≡</button>
+    <button class="tb-btn" onclick="cmd('justifyCenter')" title="Center">&#10145;&#9664;</button>
+    <button class="tb-btn" onclick="cmd('justifyRight')"  title="Align Right">≡&#9654;</button>
+    <button class="tb-btn" onclick="cmd('justifyFull')"   title="Justify">&#8700;</button>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <button class="tb-btn" onclick="cmd('insertUnorderedList')" title="Bullet List">• List</button>
+    <button class="tb-btn" onclick="cmd('insertOrderedList')"   title="Numbered">1. List</button>
+    <button class="tb-btn" onclick="cmd('indent')"  title="Indent">→ In</button>
+    <button class="tb-btn" onclick="cmd('outdent')" title="Outdent">← Out</button>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <button class="tb-btn" onclick="fmt('h2')" title="Heading 1" style="font-size:.85rem;font-weight:900;">H1</button>
+    <button class="tb-btn" onclick="fmt('h3')" title="Heading 2" style="font-size:.8rem;font-weight:700;">H2</button>
+    <button class="tb-btn" onclick="fmt('h4')" title="Heading 3" style="font-size:.76rem;font-weight:700;">H3</button>
+    <button class="tb-btn" onclick="fmt('p')"  title="Normal">¶ P</button>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <input type="color" id="pickText" class="color-input" value="#111111" onchange="applyTextColor(this.value)"/>
+    <label for="pickText" class="color-label" title="Text Color">
+      A<span class="color-bar" id="barText" style="background:#111111;"></span>
+    </label>
+    <input type="color" id="pickHL" class="color-input" value="#ffff00" onchange="cmd('hiliteColor',this.value)"/>
+    <label for="pickHL" class="color-label" title="Highlight">
+      <span style="font-size:.9rem;">▓</span>
+      <span class="color-bar" id="barHL" style="background:#ffff00;"></span>
+    </label>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <button class="tb-btn" onclick="cmd('undo')" title="Undo">↩</button>
+    <button class="tb-btn" onclick="cmd('redo')" title="Redo">↪</button>
+    <button class="tb-btn" onclick="cmd('removeFormat')" title="Clear Formatting">✕ Fmt</button>
+  </div>
+</div>
+
 <!-- CANVAS -->
 <div id="canvas"></div>
 
@@ -240,7 +320,7 @@ body{
   <div class="panel-title">⚙️ Settings</div>
 
   <div class="field"><label>Sheet Title</label>
-    <input id="iTitle" placeholder="e.g. English 2nd Written Part" oninput="updateHeaders()"/>
+    <input id="iTitle" value="English 2nd Written Part" oninput="updateHeaders()"/>
   </div>
   <div class="field"><label>Class</label>
     <input id="iClass" value="Six" oninput="updateHeaders()"/>
@@ -251,12 +331,12 @@ body{
 
   <div class="divider"></div>
   <div class="field"><label>Teacher Name</label>
-    <input id="iTeacher" value="S. M. Mahmud Hasan" oninput="updateHeaders()"/>
+    <input id="iTeacher" value="S. M. Mahmud Hasan" oninput="updateHeaders();updateSignatures();updateFooters()"/>
   </div>
   <div class="field"><label>Designation</label>
-    <input id="iDesig" value="Assistant Teacher" oninput="updateHeaders()"/>
+    <input id="iDesig" value="Assistant Teacher" oninput="updateHeaders();updateSignatures()"/>
   </div>
-  <div class="field"><label>Watermark</label>
+  <div class="field"><label>Watermark Text</label>
     <input id="iWatermark" value="Mahmud Sir" oninput="updateWatermarks()"/>
   </div>
 
@@ -279,14 +359,13 @@ body{
 </div>
 
 <script>
-let pages=[];
+let pages = [];
 
 /* ── INIT ── */
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
   addPage();
-  // seed first page with sample content
-  const ed=document.querySelector('.content-area');
-  if(ed) ed.innerHTML=`<p><b>Compositions</b></p>
+  const ed = document.querySelector('.content-area');
+  if (ed) ed.innerHTML = `<p><b>Compositions</b></p>
 <p><b>1. Your Aim in Life</b></p>
 <p>Every person has an aim in life. Without an aim life becomes meaningless. A man cannot reach success without having a clear aim.</p>
 <p>My aim in life is to become a doctor. A doctor serves sick and helpless people. Many poor people in our country cannot get proper medical treatment. I want to help them when I grow up.</p>
@@ -297,133 +376,182 @@ document.addEventListener("DOMContentLoaded",()=>{
 <p>The main duty of a student is to study regularly. Students should respect their teachers and parents. They should also take part in games and physical exercise.</p>
 <p>A good student always follows discipline and makes good use of time. If students work hard in student life, they can become successful in the future.</p>
 <p>So student life is very important for everyone.</p>`;
+
+  document.addEventListener('selectionchange', updateToolbarState);
+
+  document.getElementById('pickText').addEventListener('change', e => {
+    document.getElementById('barText').style.background = e.target.value;
+  });
+  document.getElementById('pickHL').addEventListener('change', e => {
+    document.getElementById('barHL').style.background = e.target.value;
+  });
 });
 
+/* ── TOOLBAR STATE ── */
+function updateToolbarState() {
+  document.getElementById('btnB').classList.toggle('active', document.queryCommandState('bold'));
+  document.getElementById('btnI').classList.toggle('active', document.queryCommandState('italic'));
+  document.getElementById('btnU').classList.toggle('active', document.queryCommandState('underline'));
+  document.getElementById('btnS').classList.toggle('active', document.queryCommandState('strikeThrough'));
+}
+
+/* ── EXEC COMMANDS ── */
+function cmd(command, value) {
+  document.execCommand(command, false, value ?? null);
+  updateToolbarState();
+}
+function fmt(tag) { document.execCommand('formatBlock', false, tag); }
+function applyTextColor(val) { document.execCommand('foreColor', false, val); }
+
 /* ── ADD PAGE ── */
-function addPage(){
-  const id="pg_"+Date.now();
+function addPage() {
+  const id = "pg_" + Date.now();
   pages.push(id);
-  const pgNum=pages.length;
+  const pgNum = pages.length;
 
-  const page=document.createElement("div");
-  page.className="page"; page.id=id;
+  const wrap = document.createElement("div");
+  wrap.className = "page-wrap"; wrap.id = "wrap_" + id;
 
-  /* watermark */
-  const wm=document.createElement("div");
-  wm.className="watermark"; wm.dataset.wm=id;
-  wm.textContent=document.getElementById("iWatermark").value||"Mahmud Sir";
-  if(!document.getElementById("tWatermark").checked) wm.style.display="none";
+  const label = document.createElement("div");
+  label.className = "page-label"; label.id = "label_" + id;
+  const labelSpan = document.createElement("span");
+  labelSpan.textContent = "Page " + pgNum;
+  label.appendChild(labelSpan);
+  const delBtn = document.createElement("button");
+  delBtn.className = "btn-del-page";
+  delBtn.textContent = "✕ Delete Page";
+  delBtn.onclick = () => deletePage(id);
+  delBtn.style.display = pgNum > 1 ? "inline-block" : "none";
+  label.appendChild(delBtn);
+  wrap.appendChild(label);
+
+  const page = document.createElement("div");
+  page.className = "page"; page.id = id;
+
+  const wm = document.createElement("div");
+  wm.className = "watermark"; wm.dataset.wm = id;
+  wm.textContent = document.getElementById("iWatermark").value || "Mahmud Sir";
+  if (!document.getElementById("tWatermark").checked) wm.style.display = "none";
   page.appendChild(wm);
 
-  /* header */
-  const hdr=document.createElement("div");
-  hdr.className="page-header"; hdr.dataset.hdr=id;
+  const hdr = document.createElement("div");
+  hdr.className = "page-header"; hdr.dataset.hdr = id;
   page.appendChild(hdr);
 
-  /* body */
-  const body=document.createElement("div");
-  body.className="page-body";
-  const ed=document.createElement("div");
-  ed.className="content-area"; ed.contentEditable="true"; ed.spellcheck=true;
-  ed.dataset.ed=id;
+  const body = document.createElement("div");
+  body.className = "page-body";
+
+  const ed = document.createElement("div");
+  ed.className = "content-area";
+  ed.contentEditable = "true";
+  ed.spellcheck = true;
+  ed.dataset.ed = id;
   body.appendChild(ed);
 
-  /* signature placeholder */
-  const sigHolder=document.createElement("div");
-  sigHolder.dataset.sigHolder=id;
+  const sigHolder = document.createElement("div");
+  sigHolder.dataset.sigHolder = id;
   body.appendChild(sigHolder);
-
   page.appendChild(body);
 
-  /* footer */
-  const ftr=document.createElement("div");
-  ftr.className="page-footer"; ftr.dataset.ftr=id;
+  const ftr = document.createElement("div");
+  ftr.className = "page-footer"; ftr.dataset.ftr = id;
   page.appendChild(ftr);
 
-  document.getElementById("canvas").appendChild(page);
+  wrap.appendChild(page);
+  document.getElementById("canvas").appendChild(wrap);
 
   renderHeader(id);
   renderFooter(id);
   updateSignatures();
-  updateDeleteBtns();
+  refreshDeleteBtns();
 
-  /* scroll to new page */
-  if(pgNum>1) page.scrollIntoView({behavior:"smooth",block:"start"});
+  if (pgNum > 1) page.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ── DELETE PAGE ── */
+function deletePage(id) {
+  if (pages.length <= 1) { alert("কমপক্ষে একটি page থাকতে হবে।"); return; }
+  if (!confirm("এই page টি delete করবেন?")) return;
+  pages = pages.filter(p => p !== id);
+  const wrap = document.getElementById("wrap_" + id);
+  if (wrap) wrap.remove();
+  // Re-number
+  pages.forEach((pid, i) => {
+    const lbl = document.querySelector(`#label_${pid} span`);
+    if (lbl) lbl.textContent = "Page " + (i + 1);
+  });
+  refreshDeleteBtns();
+  updateFooters();
+  updateSignatures();
+}
+
+function refreshDeleteBtns() {
+  document.querySelectorAll(".btn-del-page").forEach(btn => {
+    btn.style.display = pages.length > 1 ? "inline-block" : "none";
+  });
 }
 
 /* ── HEADER ── */
-function renderHeader(id){
-  const el=document.querySelector(`[data-hdr="${id}"]`);
-  if(!el) return;
-  const teacher=v("iTeacher")||"S. M. Mahmud Hasan";
-  const desig=v("iDesig")||"Assistant Teacher";
-  const title=v("iTitle");
-  const cls=v("iClass");
-  const subj=v("iSubject");
-  el.innerHTML=`
+function renderHeader(id) {
+  const el = document.querySelector(`[data-hdr="${id}"]`);
+  if (!el) return;
+  const teacher = v("iTeacher") || "S. M. Mahmud Hasan";
+  const desig   = v("iDesig")   || "Assistant Teacher";
+  const title   = v("iTitle");
+  const cls     = v("iClass");
+  const subj    = v("iSubject");
+  el.innerHTML = `
     <div class="hdr-row1">
       <span class="hdr-school">Bangladesh Navy School And College, CTG</span>
       <span class="hdr-teacher">Teacher: ${esc(teacher)} | ${esc(desig)}</span>
     </div>
     <div class="hdr-row2">
-      <span class="hdr-subject">${title?esc(title)+(subj?' &nbsp;|&nbsp; Subject: '+esc(subj):''):(subj?'Subject: '+esc(subj):'')}</span>
-      <span class="hdr-class">${cls?'Class: '+esc(cls):''}</span>
+      <span class="hdr-subject">${title ? esc(title) + (subj ? ' &nbsp;|&nbsp; Subject: ' + esc(subj) : '') : (subj ? 'Subject: ' + esc(subj) : '')}</span>
+      <span class="hdr-class">${cls ? 'Class: ' + esc(cls) : ''}</span>
     </div>`;
 }
-
-function updateHeaders(){pages.forEach(renderHeader);}
+function updateHeaders() { pages.forEach(renderHeader); }
 
 /* ── FOOTER ── */
-function renderFooter(id){
-  const el=document.querySelector(`[data-ftr="${id}"]`);
-  if(!el) return;
-  const teacher=v("iTeacher")||"S. M. Mahmud Hasan";
-  const pgNum=pages.indexOf(id)+1;
-  const showNum=document.getElementById("tPageNum").checked;
-  el.innerHTML=`<span>${esc(teacher)}</span>${showNum?`<span>Page ${pgNum}</span>`:''}`;
+function renderFooter(id) {
+  const el = document.querySelector(`[data-ftr="${id}"]`);
+  if (!el) return;
+  const teacher = v("iTeacher") || "S. M. Mahmud Hasan";
+  const pgNum   = pages.indexOf(id) + 1;
+  const showNum = document.getElementById("tPageNum").checked;
+  el.innerHTML  = `<span>${esc(teacher)}</span>${showNum ? `<span>Page ${pgNum}</span>` : ''}`;
 }
-
-function updateFooters(){pages.forEach(renderFooter);}
+function updateFooters() { pages.forEach(renderFooter); }
 
 /* ── WATERMARKS ── */
-function updateWatermarks(){
-  const txt=v("iWatermark")||"Mahmud Sir";
-  const show=document.getElementById("tWatermark").checked;
-  document.querySelectorAll("[data-wm]").forEach(el=>{
-    el.textContent=txt;
-    el.style.display=show?"":"none";
+function updateWatermarks() {
+  const txt  = v("iWatermark") || "Mahmud Sir";
+  const show = document.getElementById("tWatermark").checked;
+  document.querySelectorAll("[data-wm]").forEach(el => {
+    el.textContent = txt;
+    el.style.display = show ? "" : "none";
   });
 }
 
 /* ── SIGNATURES ── */
-function updateSignatures(){
-  const show=document.getElementById("tSig").checked;
-  const teacher=v("iTeacher")||"S. M. Mahmud Hasan";
-  const desig=v("iDesig")||"Assistant Teacher";
-  pages.forEach((id,i)=>{
-    const el=document.querySelector(`[data-sig-holder="${id}"]`);
-    if(!el) return;
-    const isLast=i===pages.length-1;
-    if(show && isLast){
-      el.innerHTML=`<div class="signature">
-        <div class="sig-line"></div>
-        <div class="sig-name">${esc(teacher)}</div>
-        <div class="sig-desig">${esc(desig)}</div>
-      </div>`;
-    } else {
-      el.innerHTML="";
-    }
+function updateSignatures() {
+  const show    = document.getElementById("tSig").checked;
+  const teacher = v("iTeacher") || "S. M. Mahmud Hasan";
+  const desig   = v("iDesig")   || "Assistant Teacher";
+  pages.forEach((id, i) => {
+    const el = document.querySelector(`[data-sig-holder="${id}"]`);
+    if (!el) return;
+    el.innerHTML = (show && i === pages.length - 1) ? `<div class="signature">
+      <div class="sig-line"></div>
+      <div class="sig-name">${esc(teacher)}</div>
+      <div class="sig-desig">${esc(desig)}</div>
+    </div>` : "";
   });
 }
 
-/* ── DELETE BUTTONS ── */
-function updateDeleteBtns(){
-  // no delete buttons — keep it clean like the PDF
-}
-
 /* ── UTILS ── */
-function v(id){return document.getElementById(id).value.trim();}
-function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function v(id)  { return document.getElementById(id).value.trim(); }
+function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 </script>
 </body>
 </html>
